@@ -1,9 +1,8 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const videos = ["/videos/salon-1.mp4", "/videos/salon-2.mp4"];
 
@@ -14,7 +13,7 @@ export default function Hero() {
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveVideo((prev) => (prev + 1) % videos.length);
-    }, 8000);
+    }, 30000);
 
     return () => clearInterval(timer);
   }, []);
@@ -40,6 +39,7 @@ export default function Hero() {
           src={video}
           muted
           playsInline
+          autoPlay={index === 0}
           preload="auto"
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
             activeVideo === index ? "opacity-100" : "opacity-0"
@@ -51,11 +51,11 @@ export default function Hero() {
       <div className="absolute inset-0 bg-black/45" />
 
       {/* Teal Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#163B38]/90 via-[#163B38]/55 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#163B38]/20 via-[#163B38]/10 to-transparent" />
 
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-5 pb-20 pt-32 sm:px-8 lg:px-10">
-        <div className="max-w-2xl">
+        <div className="w-full max-w-4xl">
           {/* Eyebrow */}
           <div className="mb-5 flex items-center gap-3">
             <span className="h-px w-10 bg-[#A9D9D5]" />
@@ -69,8 +69,7 @@ export default function Hero() {
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
             Where Beauty
             <br />
-            Meets{" "}
-            <span className="text-[#A9D9D5]">Creativity.</span>
+            Meets <span className="text-[#A9D9D5]">Creativity.</span>
           </h1>
 
           {/* Description */}
@@ -101,32 +100,76 @@ export default function Hero() {
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="mt-12 grid max-w-xl grid-cols-3 border-t border-white/20 pt-6">
-            <div>
-              <p className="text-2xl font-semibold text-white sm:text-3xl">
-                Hair
+          {/* Hair / Nail / Skin */}
+          <div className="mt-10 max-w-2xl border-t border-white/20 pt-6 sm:mt-12">
+            <div className="grid grid-cols-3">
+              {/* Hair */}
+              <div>
+                <p className="text-2xl font-semibold text-white sm:text-3xl">
+                  Hair
+                </p>
+
+                <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/60 sm:text-xs">
+                  Styling
+                </p>
+              </div>
+
+              {/* Nail */}
+              <div className="border-l border-white/20 pl-4 sm:pl-6">
+                <p className="text-2xl font-semibold text-white sm:text-3xl">
+                  Nail
+                </p>
+
+                <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/60 sm:text-xs">
+                  Artistry
+                </p>
+              </div>
+
+              {/* Skin */}
+              <div className="border-l border-white/20 pl-4 sm:pl-6">
+                <p className="text-2xl font-semibold text-white sm:text-3xl">
+                  Skin
+                </p>
+
+                <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/60 sm:text-xs">
+                  Care
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Salon Stats */}
+          <div className="mt-7 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
+            {/* 100% Hygienic */}
+            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15 sm:min-h-[100px] sm:px-3">
+              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                100%
               </p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/60 sm:text-xs">
-                Styling
+
+              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
+                Pristine &amp; Hygienic Environment
               </p>
             </div>
 
-            <div className="border-l border-white/20 pl-5">
-              <p className="text-2xl font-semibold text-white sm:text-3xl">
-                Nail
+            {/* 100% Vegan */}
+            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15 sm:min-h-[100px] sm:px-3">
+              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                100%
               </p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/60 sm:text-xs">
-                Artistry
+
+              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
+                Quality and Vegan Products
               </p>
             </div>
 
-            <div className="border-l border-white/20 pl-5">
-              <p className="text-2xl font-semibold text-white sm:text-3xl">
-                Skin
+            {/* 10+ Years */}
+            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 sm:min-h-[100px] sm:px-3">
+              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                10+
               </p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-white/60 sm:text-xs">
-                Care
+
+              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
+                Years Of Experience
               </p>
             </div>
           </div>
@@ -152,9 +195,7 @@ export default function Hero() {
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-7 right-6 z-20 hidden items-center gap-3 text-white/60 lg:flex">
-        <span className="text-[10px] uppercase tracking-[0.25em]">
-          Scroll
-        </span>
+        <span className="text-[10px] uppercase tracking-[0.25em]">Scroll</span>
 
         <div className="h-10 w-px bg-white/30" />
       </div>

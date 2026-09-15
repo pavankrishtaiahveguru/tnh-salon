@@ -7,6 +7,7 @@ import {
   FaEnvelope,
 } from "react-icons/fa";
 import { FiArrowUpRight } from "react-icons/fi";
+import DevelopedByStaffArc from "../DevelopedByStaffArc";
 
 const quickLinks = [
   { name: "Services", href: "#services" },
@@ -41,7 +42,7 @@ export default function Footer() {
             </p>
 
             <a
-              href="https://www.instagram.com/"
+              href="https://www.instagram.com/thenailhue?igsh=aDR0bmltaGhrNWt0"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
@@ -152,6 +153,8 @@ export default function Footer() {
           <p className="text-xs text-white/70">
             © {new Date().getFullYear()} The Nail Hue. All rights reserved.
           </p>
+
+          <DevelopedByStaffArc />
 
           <p className="text-xs text-white/60">
             Hair <span className="mx-1">|</span> Nail{" "}

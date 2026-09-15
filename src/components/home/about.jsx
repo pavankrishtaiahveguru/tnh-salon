@@ -5,27 +5,27 @@ import { ArrowRight, Sparkles, Heart, Scissors, Star } from "lucide-react";
 const uniqueness = [
   {
     icon: Sparkles,
-    title: "Personalized Beauty",
+    title: "Creative Nail Art & Makeovers",
     description:
-      "Every service is tailored to your style, preferences, and beauty goals.",
-  },
-  {
-    icon: Star,
-    title: "Expert Professionals",
-    description:
-      "Our skilled professionals focus on creativity, precision, and beautiful results.",
+      "Every nail design is imagined fresh — bold, detailed, and uniquely yours. No two sets are ever the same.",
   },
   {
     icon: Scissors,
-    title: "Complete Beauty Care",
+    title: "Expert Hair Makeovers",
     description:
-      "Hair, nails, and skin services thoughtfully brought together under one roof.",
+      "From cuts to color to complete transformations, our stylists blend creativity with flawless technique.",
+  },
+  {
+    icon: Star,
+    title: "Unmatched Salon Expertise",
+    description:
+      "Years of hands-on mastery across nail art and hair styling mean consistent, flawless results.",
   },
   {
     icon: Heart,
-    title: "A Relaxing Experience",
+    title: "Vegan Nail & Skin Care",
     description:
-      "A warm and welcoming space where you can relax, refresh, and feel your best.",
+      "Our nail and skin treatments use only vegan, cruelty-free products — beauty that's gentle, clean, and consciously crafted.",
   },
 ];
 
@@ -41,14 +41,13 @@ export default function About() {
           <div className="relative">
             <div className="relative overflow-hidden rounded-[2rem]">
               <Image
-                src="/about/salon.jpg"
+                src="/images/about/salon.jpg"
                 alt="The Nail Hue Salon"
                 width={900}
                 height={1100}
                 className="h-[500px] w-full object-cover sm:h-[600px]"
               />
 
-              {/* Image Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#173B38]/50 via-transparent to-transparent" />
             </div>
 
@@ -67,27 +66,38 @@ export default function About() {
               Why The Nail Hue
             </span>
 
-            <h2 className="mt-4 max-w-xl text-4xl font-semibold leading-tight tracking-tight text-[#173B38] sm:text-5xl lg:text-[3.5rem]">
-              More Than a Salon.
-              <span className="block text-[#218F87]">
-                A Space to Feel Beautiful.
-              </span>
+            {/* H1 */}
+            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-[#173B38] sm:text-5xl lg:text-[3.5rem]">
+              More Than a Salon — Creative Nail & Hair Makeovers with Vegan
+              Beauty Care
+            </h1>
+
+            {/* H2 */}
+            <h2 className="mt-5 max-w-2xl text-xl font-semibold leading-snug text-[#218F87] sm:text-2xl">
+              Where Artistic Nail Designs Meet Expert Hair Makeovers, Powered by
+              Vegan Products
             </h2>
 
-            <p className="mt-6 max-w-xl text-sm leading-7 text-[#647572] sm:text-base">
-              At The Nail Hue, beauty is more than a service — it is an
-              experience. We bring creativity, expertise, and attention to
-              detail together to create a beauty experience that feels personal,
-              comfortable, and uniquely yours.
-            </p>
+            {/* Body */}
+            <div className="mt-6 max-w-2xl space-y-4 text-sm leading-7 text-[#647572] sm:text-base">
+              <p>
+                At The Nail Hue, we specialize in creative nail art and expert
+                hair makeovers — two crafts, one studio, one standard of
+                excellence. Every nail design and every haircut or style is
+                treated as a fresh creation, never a copy-paste routine, and
+                finished with vegan, cruelty-free care for your nails and skin.
+              </p>
 
-            <p className="mt-4 max-w-xl text-sm leading-7 text-[#647572] sm:text-base">
-              From beautiful hair and artistic nails to radiant skin, every
-              treatment is thoughtfully designed to help you look good, feel
-              confident, and leave feeling refreshed.
-            </p>
+              <p>
+                Whether you're after a bold nail art transformation or a
+                complete hair makeover, our artists bring imagination,
+                precision, and years of hands-on expertise to every chair —
+                because your look deserves to be designed, not repeated, and
+                cared for the clean way.
+              </p>
+            </div>
 
-            {/* Uniqueness Grid */}
+            {/* Feature Blocks */}
             <div className="mt-9 grid gap-5 sm:grid-cols-2">
               {uniqueness.map((item) => {
                 const Icon = item.icon;
@@ -100,7 +110,7 @@ export default function About() {
                       </div>
 
                       <div>
-                        <h3 className="text-sm font-semibold text-[#173B38] sm:text-base">
+                        <h3 className="text-sm font-semibold leading-5 text-[#173B38] sm:text-base">
                           {item.title}
                         </h3>
 

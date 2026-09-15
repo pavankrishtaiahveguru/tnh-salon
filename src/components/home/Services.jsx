@@ -4,49 +4,49 @@ import { ArrowRight } from "lucide-react";
 
 const services = [
   {
-    name: "Hair Cut",
+    name: "Hair Cut and Styling",
     category: "Hair",
-    image: "/services/hair-cut.jpg",
+    image: "/images/services/hair-cut-and-styling.jpg",
   },
   {
     name: "Hair Colour",
     category: "Hair",
-    image: "/services/hair-colour.jpg",
+    image: "/images/services/hair-colour.jpg",
   },
   {
     name: "Hair Spa",
     category: "Hair",
-    image: "/services/hair-spa.jpg",
+    image: "/images/services/hair-colour.jpg",
   },
   {
-    name: "Manicure",
+    name: "Pedi",
     category: "Nails",
-    image: "/services/manicure.jpg",
+    image: "/images/services/nail-art.jpg",
   },
   {
     name: "Nail Extensions",
     category: "Nails",
-    image: "/services/nail-extensions.jpg",
+    image: "/images/services/nail-extensions.jpg",
   },
   {
     name: "Nail Art",
     category: "Nails",
-    image: "/services/nail-art.jpg",
+    image: "/images/services/nail.jpg",
   },
   {
     name: "Facial",
     category: "Skin",
-    image: "/services/facial.jpg",
+    image: "/images/services/facial.jpg",
   },
   {
     name: "Cleanup",
     category: "Skin",
-    image: "/services/cleanup.jpg",
+    image: "/images/services/pedi.jpg",
   },
   {
     name: "D-Tan",
     category: "Skin",
-    image: "/services/d-tan.jpg",
+    image: "/images/services/facial.jpg",
   },
 ];
 
