@@ -2,17 +2,19 @@
 // Admin data access for Import & Export — backed by the Node.js API
 // ==================================================
 // Same conventions as the other lib/admin modules: all calls go through the
-// shared API client (src/lib/api.js), which targets NEXT_PUBLIC_API_URL and
-// attaches the admin's Bearer token automatically.
+// shared API client conventions (src/lib/api.js), which targets
+// NEXT_PUBLIC_API_URL and attaches the admin's Bearer token automatically.
 //
-//   GET  /api/catalog/export  -> JSON of the live MySQL catalog (existing API)
-//   POST /api/catalog/import  -> JSON catalog payload (existing API)
+//   GET  /api/catalog/export  -> the live MySQL catalog as the
+//                                reference-format .xlsx (2 sheets)
+//   POST /api/catalog/import  -> multipart .xlsx upload; the backend parses,
+//                                validates the whole file, then applies it in
+//                                one transaction to MySQL
 //
-// Excel conversion happens HERE, at the Import & Export layer only:
-//   Export: JSON response -> catalogExcel.buildWorkbookFromCatalog -> .xlsx
-//   Import: .xlsx file    -> catalogExcel.parseWorkbookToCatalog -> JSON body
-// The website itself keeps speaking JSON; the backend/database are untouched.
-import api, { ApiError } from "@/lib/api";
+// The Excel structure lives entirely on the backend
+// (src/services/catalogExcelService.js) — the database is always the source
+// of truth and no catalogue data is stored or derived in the browser.
+import { ApiError } from "@/lib/api";
 import { getToken } from "./auth";
 
 function toUserMessage(error) {
@@ -61,20 +63,12 @@ export async function exportCatalog() {
       return { ok: false, message: message || "Export failed. Please try again." };
     }
 
-    const catalog = await response.json();
-
-    // Convert the JSON catalog into a styled Excel workbook and download it.
-    // (Excel is only ever an admin-facing representation of the JSON data.)
-    const { buildWorkbookFromCatalog, workbookToBuffer } = await import(
-      "./catalogExcel"
-    );
-    const workbook = buildWorkbookFromCatalog(catalog);
-    const buffer = await workbookToBuffer(workbook);
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const filename = `catalog-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const blob = await response.blob();
+    const filename =
+      response.headers
+        .get("content-disposition")
+        ?.match(/filename="([^"]+)"/)?.[1] ??
+      `the-nail-hue-services-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -91,19 +85,54 @@ export async function exportCatalog() {
   }
 }
 
-// Converts the selected .xlsx file into the existing JSON catalog payload
-// (with full validation) and POSTs it to /api/catalog/import as JSON. The
-// backend keeps receiving exactly the same structure as before. Returns the
-// server's { success, message, data } payload or throws ApiError /
-// ExcelImportError (row-level issues) before any request is made.
-export async function parseExcelCatalog(file) {
-  const { parseWorkbookToCatalog } = await import("./catalogExcel");
-  const buffer = await file.arrayBuffer();
-  return parseWorkbookToCatalog(buffer);
-}
+// POST /api/catalog/import -> uploads the .xlsx to the backend, which
+// validates the entire file before touching the database and applies valid
+// files inside a single transaction. Resolves with the server's
+// { success, message, data: { processed, updated, created, skipped, errors } }
+// payload; throws ApiError (with row-level `errors`) on validation failure.
+export async function importCatalogFile(file) {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "";
+  if (!base) {
+    throw new ApiError(
+      "API URL is not configured. Set NEXT_PUBLIC_API_URL in .env.local.",
+      0,
+    );
+  }
 
-// POST /api/catalog/import -> sends the converted JSON payload to the existing
-// backend endpoint, which validates and upserts it into the existing tables.
-export async function importCatalog(payload) {
-  return api.post("/api/catalog/import", payload);
+  const body = new FormData();
+  body.append("file", file, file.name);
+
+  try {
+    const response = await fetch(`${base}/api/catalog/import`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getToken() ?? ""}`,
+      },
+      credentials: "include",
+      body,
+    });
+
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const message =
+        (payload && typeof payload.message === "string" && payload.message) ||
+        "Import failed. Please check the file and try again.";
+      const errors = payload?.errors ?? [];
+      if (response.status === 401) {
+        throw new ApiError(
+          "Your session has expired. Please sign in again.",
+          401,
+          undefined,
+          errors,
+        );
+      }
+      throw new ApiError(message, response.status, undefined, errors);
+    }
+
+    return payload;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(toUserMessage(error), 0);
+  }
 }

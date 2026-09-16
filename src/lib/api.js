@@ -17,13 +17,15 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // Error surfaced to UI code. `status` lets callers distinguish 401 (expired
-// session) from other failures without string matching.
+// session) from other failures without string matching. `errors` carries
+// optional row-level details (e.g. the catalog import error report).
 export class ApiError extends Error {
-  constructor(message, status = 0, cause) {
+  constructor(message, status = 0, cause, errors = []) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.cause = cause;
+    this.errors = Array.isArray(errors) ? errors : [];
   }
 }
 
@@ -118,12 +120,14 @@ async function request(
     const fallbackMessage =
       (payload && typeof payload.message === "string" && payload.message) || "";
     const message = toUserMessage(response.status, fallbackMessage);
+    const errors =
+      payload && Array.isArray(payload.errors) ? payload.errors : [];
 
     if (response.status === 401 && auth && onUnauthorized) {
       onUnauthorized();
     }
 
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, response.status, undefined, errors);
   }
 
   return payload;

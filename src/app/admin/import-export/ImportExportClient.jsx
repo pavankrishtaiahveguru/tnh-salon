@@ -11,8 +11,7 @@ import {
 } from "lucide-react";
 import {
   exportCatalog,
-  parseExcelCatalog,
-  importCatalog,
+  importCatalogFile,
 } from "@/lib/admin/catalog";
 import { useAdminToast } from "@/components/admin/AdminToast";
 
@@ -28,28 +27,23 @@ export default function ImportExportClient() {
   const inputRef = useRef(null);
 
   const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null); // { summary, payload }
   const [importing, setImporting] = useState(false);
-  const [parsing, setParsing] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [fileError, setFileError] = useState("");
   const [lastResult, setLastResult] = useState(null);
 
   const clearSelectedFile = () => {
     setSelectedFile(null);
-    setPreview(null);
     setFileError("");
   };
 
-  // Step 1 — read the .xlsx, convert it to the JSON catalog payload and show
-  // a preview summary. Nothing is sent to the backend until the admin clicks
-  // "Import data".
-  const handleFileChange = async (event) => {
+  // Selecting a file only stages it — the backend parses and validates the
+  // whole workbook before any database change is made.
+  const handleFileChange = (event) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     setFileError("");
     setLastResult(null);
-    setPreview(null);
 
     if (!file) {
       setSelectedFile(null);
@@ -67,34 +61,6 @@ export default function ImportExportClient() {
     }
 
     setSelectedFile(file);
-    setParsing(true);
-    try {
-      const payload = await parseExcelCatalog(file);
-      const data = payload?.data ?? {};
-      setPreview({
-        payload,
-        summary: {
-          categories: data.categories?.length ?? 0,
-          subCategories: (data.categories ?? []).reduce(
-            (total, category) => total + (category.subCategories?.length ?? 0),
-            0,
-          ),
-          services: data.services?.length ?? 0,
-          branches: data.branches?.length ?? 0,
-        },
-      });
-    } catch (error) {
-      const issues = Array.isArray(error?.issues) ? error.issues : [];
-      setFileError(
-        issues.length > 0
-          ? `${error.message} First issue: ${issues[0]}`
-          : (error?.message ??
-              "This file could not be read. Please use an Excel file exported from this page."),
-      );
-      setSelectedFile(null);
-    } finally {
-      setParsing(false);
-    }
   };
 
   const handleExport = async () => {
@@ -111,29 +77,33 @@ export default function ImportExportClient() {
     }
   };
 
-  // Step 2 — commit the parsed payload through the existing backend API.
+  // Upload the staged .xlsx. The backend validates everything first; on
+  // success it applies the file in one transaction and returns a summary.
   const handleImport = async () => {
-    if (!preview || importing) return;
+    if (!selectedFile || importing) return;
     setImporting(true);
     setLastResult(null);
     try {
-      const response = await importCatalog(preview.payload);
+      const response = await importCatalogFile(selectedFile);
       const data = response?.data ?? {};
       setLastResult({
         ok: true,
         summary: response?.message ?? "Import completed successfully.",
-        issues: Array.isArray(data.issues) ? data.issues : [],
+        stats: data,
+        issues: [],
       });
       clearSelectedFile();
       toast.success(response?.message ?? "Import completed successfully.");
     } catch (error) {
       const message =
         error?.message ?? "Import failed. Please check the file and try again.";
+      const issues = Array.isArray(error?.errors) ? error.errors : [];
       toast.error(message);
       setLastResult({
         ok: false,
         summary: message,
-        issues: Array.isArray(error?.issues) ? error.issues : [],
+        stats: null,
+        issues,
       });
     } finally {
       setImporting(false);
@@ -165,7 +135,7 @@ export default function ImportExportClient() {
           <button
             type="button"
             onClick={handleExport}
-            disabled={exporting || importing || parsing}
+            disabled={exporting || importing}
             className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#218F87] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#1B756E] disabled:opacity-60"
           >
             {exporting ? (
@@ -214,7 +184,7 @@ export default function ImportExportClient() {
               <button
                 type="button"
                 onClick={clearSelectedFile}
-                disabled={importing || parsing}
+                disabled={importing}
                 className="shrink-0 text-xs font-semibold text-[#5F7774] transition-colors hover:text-[#09221F] disabled:opacity-50"
               >
                 Remove
@@ -223,7 +193,7 @@ export default function ImportExportClient() {
           ) : (
             <button
               type="button"
-              disabled={importing || parsing}
+              disabled={importing}
               onClick={() => inputRef.current?.click()}
               className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-[#CBE2DE] bg-[#F9FCFB] px-4 py-8 text-center transition-colors hover:border-[#218F87] hover:bg-[#F3F8F6] disabled:opacity-60"
             >
@@ -252,48 +222,18 @@ export default function ImportExportClient() {
           />
         </div>
 
-        {parsing ? (
-          <div className="mt-4 flex items-center gap-2 rounded-lg border border-[#D7EAE7] bg-[#F9FCFB] px-4 py-3 text-sm text-[#5F7774]">
-            <Loader2 size={16} className="animate-spin text-[#218F87]" />
-            Reading Excel file…
-          </div>
-        ) : null}
-
-        {preview && !parsing ? (
-          <div className="mt-4 rounded-lg border border-[#BFE3DF] bg-[#EFF9F7] px-4 py-3 text-sm leading-6 text-[#09221F]">
-            <p className="flex items-start gap-2 font-medium">
-              <ShieldCheck size={16} className="mt-0.5 shrink-0 text-[#218F87]" />
-              Excel file loaded successfully. Review the summary before
-              importing.
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
-              <p>
-                Categories:{" "}
-                <span className="font-semibold">{preview.summary.categories}</span>
-              </p>
-              <p>
-                Sub-categories:{" "}
-                <span className="font-semibold">
-                  {preview.summary.subCategories}
-                </span>
-              </p>
-              <p>
-                Services:{" "}
-                <span className="font-semibold">{preview.summary.services}</span>
-              </p>
-              <p>
-                Branches:{" "}
-                <span className="font-semibold">{preview.summary.branches}</span>
-              </p>
-            </div>
-          </div>
-        ) : null}
+        {selectedFile ? null : (
+          <p className="mt-3 text-[11px] leading-5 text-[#5F7774]">
+            The file is validated on the server before anything is imported —
+            if any row has a problem, nothing is changed.
+          </p>
+        )}
 
         <div className="mt-4 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={handleImport}
-            disabled={!preview || importing || parsing}
+            disabled={!selectedFile || importing}
             className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#218F87] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#1B756E] disabled:opacity-60"
           >
             {importing ? (
@@ -321,12 +261,42 @@ export default function ImportExportClient() {
               )}
               {lastResult.summary}
             </p>
+            {lastResult.stats ? (
+              <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
+                <p>
+                  Processed:{" "}
+                  <span className="font-semibold">{lastResult.stats.processed ?? 0}</span>
+                </p>
+                <p>
+                  Updated:{" "}
+                  <span className="font-semibold">{lastResult.stats.updated ?? 0}</span>
+                </p>
+                <p>
+                  Created:{" "}
+                  <span className="font-semibold">{lastResult.stats.created ?? 0}</span>
+                </p>
+                <p>
+                  Errors:{" "}
+                  <span className="font-semibold">{lastResult.stats.errors ?? 0}</span>
+                </p>
+              </div>
+            ) : null}
             {lastResult.issues.length > 0 ? (
-              <ul className="mt-2 list-inside list-disc space-y-0.5 text-xs opacity-90">
-                {lastResult.issues.slice(0, 8).map((issue) => (
-                  <li key={issue}>{issue}</li>
-                ))}
-              </ul>
+              <div className="mt-2">
+                <p className="text-xs font-semibold">
+                  Problems found (nothing was changed):
+                </p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs opacity-90">
+                  {lastResult.issues.slice(0, 20).map((issue) => (
+                    <li key={issue}>{issue}</li>
+                  ))}
+                </ul>
+                {lastResult.issues.length > 20 ? (
+                  <p className="mt-1 text-[11px] opacity-80">
+                    …and {lastResult.issues.length - 20} more.
+                  </p>
+                ) : null}
+              </div>
             ) : null}
           </div>
         ) : null}
