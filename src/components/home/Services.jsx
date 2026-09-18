@@ -9,41 +9,52 @@ const services = [
     description:
       "Professional hair colour services including balayage, global colour, grey coverage, grey blending and colour correction. Every colour service begins with a consultation to understand your existing colour, hair history and desired result.",
     image: "/images/services/hair-colour.jpg",
+    size: "large",
   },
-  {
-    name: "Nails — Manicure, Pedicure, Extensions & Nail Art",
-    category: "Nails",
-    description:
-      "Manicure, Pedicure, nail extensions, BIAB, Russian manicure, Infills/Refills, safe nail removal and custom nail art including French, chrome and 3D designs.",
-    image: "/images/services/nail-extensions.jpg",
-  },
+
   {
     name: "Hair Cut, Styling & Treatments",
     category: "Hair",
     description:
       "Professional haircuts, styling, hair spa and treatments tailored to your hair type, condition and desired look.",
     image: "/images/services/hair-cut-and-styling.jpg",
+    size: "large",
   },
+
   {
     name: "Facials & Korean Skincare",
     category: "Skin",
     description:
       "Korean facials, hydrafacial and consultation-led skin treatments. We match the facial to your skin concern, not to a package.",
     image: "/images/services/facial.jpg",
+    size: "large",
   },
+
+  {
+    name: "Nails — Manicure, Pedicure, Extensions & Nail Art",
+    category: "Nails",
+    description:
+      "Manicure, Pedicure, nail extensions, BIAB, Russian manicure, Infills/Refills, safe nail removal and custom nail art including French, chrome and 3D designs.",
+    image: "/images/services/nail-extensions.jpg",
+    size: "medium",
+  },
+
   {
     name: "Waxing & De-Tan",
     category: "Skin",
     description:
       "Waxing and de-tan for face and body. Single-use spatulas, hygiene protocol shared openly, with appointments available at both studios.",
     image: "/images/services/pedi.jpg",
+    size: "medium",
   },
+
   {
     name: "Brows & Lashes",
     category: "Beauty",
     description:
       "Brow mapping, threading, waxing, tinting and lash treatments at The Nail Hue, Indiranagar and Sarjapur Road. Shape planned to your face and growth pattern.",
     image: "/images/services/brows-lashes.jpg",
+    size: "medium",
   },
 ];
 
@@ -79,13 +90,23 @@ export default function Services() {
               className="group overflow-hidden rounded-2xl bg-white shadow-[0_8px_30px_rgba(33,143,135,0.08)] ring-1 ring-[#218F87]/10 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_rgba(33,143,135,0.16)]"
             >
               {/* Image */}
-              <div className="relative aspect-[4/3] overflow-hidden">
+              <div
+                className={`relative w-full overflow-hidden ${
+                  service.size === "large"
+                    ? "aspect-[4/5]"
+                    : service.size === "medium"
+                      ? "aspect-square"
+                      : service.size === "portrait"
+                        ? "aspect-[2/3]"
+                        : "aspect-[4/3]"
+                }`}
+              >
                 <Image
                   src={service.image}
                   alt={`${service.name} at The Nail Hue`}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />

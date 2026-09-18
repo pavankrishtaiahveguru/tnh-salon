@@ -1,10 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { Clock, UserRound, Plus, X } from "lucide-react";
 import BookingModal from "./BookingModal";
 
-export default function ServiceCard({ service, onBook }) {
+// Card grid images are ~48–64px tiles served from Cloudinary. Fixed
+// responsive sizes prevent the browser from downloading oversized originals
+// (Phase 16). Detail-modal imagery reuses the same underlying file with a
+// larger slot, so it keeps fill + a bigger sizes value.
+const CARD_IMAGE_SIZES = "(max-width: 640px) 48px, (max-width: 768px) 64px, 64px";
+const MODAL_IMAGE_SIZES = "152px";
+
+function ServiceCard({ service, onBook }) {
   const [showDetails, setShowDetails] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
@@ -45,6 +53,29 @@ export default function ServiceCard({ service, onBook }) {
     };
   }, [showDetails]);
 
+  // Stable identity for the parent grid's onBook prop (Phase 15): keeps the
+  // memo comparison meaningful when the Services page re-renders for
+  // pagination/fetch state changes.
+  const handleBookClick = useCallback(() => {
+    if (onBook) {
+      onBook(service);
+    } else {
+      setIsBookingOpen(true);
+    }
+  }, [onBook, service]);
+
+  const handleDetailsBook = useCallback(() => {
+    setShowDetails(false);
+    if (onBook) {
+      onBook(service);
+    } else {
+      setIsBookingOpen(true);
+    }
+  }, [onBook, service]);
+
+  const openDetails = useCallback(() => setShowDetails(true), []);
+  const closeDetails = useCallback(() => setShowDetails(false), []);
+
   return (
     <>
       {/* ================= SERVICE CARD ================= */}
@@ -58,9 +89,12 @@ export default function ServiceCard({ service, onBook }) {
             {/* Image / Initial */}
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-[#E8F6F4] sm:h-[64px] sm:w-[64px] sm:rounded-[14px]">
               {service.image ? (
-                <img
+                <Image
                   src={service.image}
                   alt={service.name}
+                  width={64}
+                  height={64}
+                  sizes={CARD_IMAGE_SIZES}
                   className="h-full w-full object-cover"
                 />
               ) : (
@@ -153,7 +187,7 @@ export default function ServiceCard({ service, onBook }) {
             {/* VIEW DETAILS */}
             <button
               type="button"
-              onClick={() => setShowDetails(true)}
+              onClick={openDetails}
               className="flex-1 rounded-lg border border-[#CDE6E3] px-1.5 py-1.5 text-[9px] font-bold text-[#09221F] transition-colors hover:border-[#28B8B0] hover:bg-[#F3FAF9] sm:px-2 sm:py-2 sm:text-[11px]"
             >
               View details
@@ -162,9 +196,7 @@ export default function ServiceCard({ service, onBook }) {
             {/* BOOK */}
             <button
               type="button"
-              onClick={() =>
-                onBook ? onBook(service) : setIsBookingOpen(true)
-              }
+              onClick={handleBookClick}
               className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#09221F] px-1.5 py-1.5 text-[9px] font-bold text-white transition-colors hover:bg-[#218F87] sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[11px]"
             >
               <Plus size={13} />
@@ -208,7 +240,7 @@ export default function ServiceCard({ service, onBook }) {
 
               <button
                 type="button"
-                onClick={() => setShowDetails(false)}
+                onClick={closeDetails}
                 aria-label="Close service details"
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EEF6F4] text-[#285F5A] transition-colors hover:bg-[#DCEDEA]"
               >
@@ -222,9 +254,12 @@ export default function ServiceCard({ service, onBook }) {
               <div className="flex items-start gap-4">
                 <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#E8F6F4]">
                   {service.image ? (
-                    <img
+                    <Image
                       src={service.image}
                       alt={service.name}
+                      width={76}
+                      height={76}
+                      sizes={MODAL_IMAGE_SIZES}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -372,7 +407,7 @@ export default function ServiceCard({ service, onBook }) {
               <div className="mt-6 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowDetails(false)}
+                  onClick={closeDetails}
                   className="flex-1 rounded-xl border border-[#CDE6E3] px-4 py-3 text-sm font-bold text-[#09221F] transition-colors hover:border-[#28B8B0] hover:bg-[#F3FAF9]"
                 >
                   Close
@@ -380,10 +415,7 @@ export default function ServiceCard({ service, onBook }) {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowDetails(false);
-                    onBook ? onBook(service) : setIsBookingOpen(true);
-                  }}
+                  onClick={handleDetailsBook}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#09221F] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#218F87]"
                 >
                   <Plus size={16} />
@@ -404,3 +436,10 @@ export default function ServiceCard({ service, onBook }) {
     </>
   );
 }
+
+// memo: the Services page re-renders on fetch/pagination state changes; with
+// stable service objects and the useCallback handlers above, unchanged cards
+// skip re-rendering. (React Compiler auto-memoizes much of this, but the
+// explicit boundary keeps the prop contract clear and covers non-compiler
+// builds.)
+export default memo(ServiceCard);

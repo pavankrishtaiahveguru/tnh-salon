@@ -219,7 +219,7 @@ const galleryItems = [
   {
     type: "video",
     category: "Skin",
-    src: "https://res.cloudinary.com/eumjdehq/video/upload/v1789722755/skin.mp4",
+    src: "https://res.cloudinary.com/eumjdehq/video/upload/v1789729336/skin.mp4",
     alt: "Skin care at The Nail Hue",
     size: "portrait",
   },

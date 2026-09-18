@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -23,21 +23,26 @@ import {
   Paintbrush,
   Droplet,
   Eye,
-  X,
-  Check,
+  AlertCircle,
 } from "lucide-react";
 
 import ServicesHero from "@/components/services/ServicesHero";
 import ServiceCard from "@/components/services/ServiceCard";
+import ServicesGridSkeleton from "@/components/services/ServicesGridSkeleton";
 import CurrentBookingModal from "@/components/services/BookingModal";
 import PendingBookingBar from "@/components/services/PendingBookingBar";
-import { getServices } from "@/lib/admin/services";
-import { getCategories } from "@/lib/admin/categories";
-import { getBranches } from "@/lib/branches";
 import {
-  areServicesAvailableAtStudio,
-  isServiceAvailableAtStudio,
-} from "@/components/services/bookingUtils";
+  getServicesPage,
+  getCategoriesCached,
+  getBranchesCached,
+  getAllActiveServices,
+  clearServicesCache,
+  SERVICES_PAGE_SIZE,
+} from "@/lib/services";
+import { areServicesAvailableAtStudio } from "@/components/services/bookingUtils";
+
+// Debounce window for search-as-you-type (each commit is a server request).
+const SEARCH_DEBOUNCE_MS = 350;
 
 // Icon fallback for each category (used only if category.image isn't provided).
 const CATEGORY_ICONS = {
@@ -60,25 +65,13 @@ const CATEGORY_ICONS = {
   "brow-lashes": Eye,
 };
 
-function getMinPrice(service) {
-  if (service.pricingType === "fixed" || service.pricingType === "from") {
-    return service.price ?? Number.MAX_SAFE_INTEGER;
-  }
-  if (service.variants && service.variants.length > 0) {
-    return Math.min(...service.variants.map((v) => v.price));
-  }
-  return Number.MAX_SAFE_INTEGER;
-}
-
-function getMaxPrice(service) {
-  if (service.pricingType === "fixed" || service.pricingType === "from") {
-    return service.price ?? 0;
-  }
-  if (service.variants && service.variants.length > 0) {
-    return Math.max(...service.variants.map((v) => v.price));
-  }
-  return 0;
-}
+// Server-side sort keys (backend whitelists these; anything else = menu order).
+const SORT_PARAMS = {
+  menu: "menu",
+  "price-low": "priceAsc",
+  "price-high": "priceDesc",
+  name: "nameAsc",
+};
 
 function CategoryTile({ category, isSelected, onSelect }) {
   const Icon = CATEGORY_ICONS[category.id] ?? LayoutGrid;
@@ -125,157 +118,6 @@ function CategoryTile({ category, isSelected, onSelect }) {
   );
 }
 
-function BookingModal({ service, bookingStep, setBookingStep, onClose }) {
-  if (!service) return null;
-
-  const variants = service.variants ?? [];
-  const startingPrice =
-    service.price ?? variants[0]?.price ?? service.priceRange?.min ?? null;
-
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center bg-[#09221F]/45 p-0 backdrop-blur-sm sm:items-center sm:p-5">
-      <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[28px] bg-white shadow-[0_25px_80px_rgba(9,34,31,0.2)] sm:max-w-[520px] sm:rounded-[28px]">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E3EFED] bg-white px-5 py-4 sm:px-6">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#218F87]">
-              Book appointment
-            </p>
-            <h2 className="mt-1 text-lg font-bold text-[#09221F]">
-              {service.name}
-            </h2>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close booking"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EEF6F4] text-[#285F5A] transition-colors hover:bg-[#DCEEEB]"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="p-5 sm:p-6">
-          {bookingStep === "service" ? (
-            <>
-              <div className="rounded-2xl border border-[#D7EAE7] bg-[#FAFCFB] p-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-[#E8F6F4]">
-                    {service.image ? (
-                      <img
-                        src={service.image}
-                        alt={service.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xl font-bold text-[#28B8B0]">
-                        {service.name?.slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="min-w-0">
-                    {service.gender && (
-                      <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#718785]">
-                        {service.gender}
-                      </p>
-                    )}
-                    <h3 className="mt-1 text-base font-bold text-[#09221F]">
-                      {service.name}
-                    </h3>
-                  </div>
-                </div>
-
-                {service.description && (
-                  <p className="mt-4 text-sm leading-6 text-[#718785]">
-                    {service.description}
-                  </p>
-                )}
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {service.gender && (
-                    <span className="rounded-lg bg-[#EAF5F3] px-3 py-1.5 text-xs font-medium text-[#285F5A]">
-                      {service.gender}
-                    </span>
-                  )}
-                  {service.duration && (
-                    <span className="rounded-lg bg-[#EAF5F3] px-3 py-1.5 text-xs font-medium text-[#456764]">
-                      {service.duration}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-5 border-t border-dashed border-[#D7EAE7] pt-5">
-                <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#7A8D8A]">
-                  {variants.length > 0 ? "Choose a service option" : "Price"}
-                </p>
-
-                {variants.length > 0 ? (
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    {variants.map((variant, index) => (
-                      <button
-                        key={`${variant.label}-${index}`}
-                        type="button"
-                        onClick={() => setBookingStep(`variant-${index}`)}
-                        className="rounded-xl border border-[#D7EAE7] bg-white p-3 text-left transition-all hover:border-[#28B8B0] hover:bg-[#F3FAF9]"
-                      >
-                        <p className="text-base font-bold text-[#09221F]">
-                          ₹{variant.price}
-                        </p>
-                        <p className="mt-1 text-[10px] uppercase tracking-wide text-[#718785]">
-                          {variant.label}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-2xl font-bold text-[#09221F]">
-                    {startingPrice != null
-                      ? `₹${startingPrice}`
-                      : "Price on request"}
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setBookingStep("details")}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#09221F] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#218F87]"
-              >
-                <Check size={17} />
-                Continue Booking
-              </button>
-            </>
-          ) : (
-            <div className="py-6 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#E8F6F4] text-[#218F87]">
-                <Check size={26} />
-              </div>
-              <h3 className="mt-4 text-xl font-bold text-[#09221F]">
-                {bookingStep.startsWith("variant-")
-                  ? "Option selected"
-                  : "Service selected"}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-[#718785]">
-                {service.name} is ready to book. Continue with your appointment
-                details.
-              </p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="mt-6 w-full rounded-xl bg-[#09221F] px-5 py-3.5 text-sm font-bold text-white transition-colors hover:bg-[#218F87]"
-              >
-                Continue
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function LoadingFallback() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FFFDF9]">
@@ -291,14 +133,74 @@ function ServicesContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Filters live in the URL; the page mirrors them into API calls. The
+  // category/subCategory params are trusted as-is (validated server-side) so
+  // deep links don't trigger a double fetch while metadata loads.
   const search = searchParams.get("q") ?? "";
   const sortBy = searchParams.get("sort") ?? "menu";
-  const [categories, setCategories] = useState([]);
-  const [services, setServices] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [servicesError, setServicesError] = useState("");
-
   const branchParam = searchParams.get("branch") ?? "all";
+  const categoryParam = searchParams.get("category");
+  const subCategoryParam = searchParams.get("subCategory");
+
+  const [categories, setCategories] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [services, setServices] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+  const [facetCategory, setFacetCategory] = useState(null);
+  const [pagination, setPagination] = useState(null);
+  const [servicesError, setServicesError] = useState("");
+  const [isFetching, setIsFetching] = useState(true);
+  const [allServices, setAllServices] = useState(null); // booking catalogue
+  const [retryCount, setRetryCount] = useState(0);
+
+  // ---- Append-only "View More" pagination (internal state, NOT in URL) ----
+  // The fetch effect always requests page 1 and REPLACES the list; View More
+  // requests the next page and APPENDS. `page` is kept in a ref so filter
+  // resets never race a stale page number.
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const pageRef = useRef(1);
+  // Shared filter shape for page-1 fetch, View More, and retry — guarantees
+  // every request carries the same search/category/branch/subCategory/sort.
+  const filtersRef = useRef(null);
+
+  // Local search input with debounce — avoids one API request per keystroke.
+  // Render-time reset (React docs "adjusting state during render"): when the
+  // committed URL search changes externally (back/forward, clear filters),
+  // the input snaps to it without an effect round-trip.
+  const [searchInput, setSearchInput] = useState(search);
+  const [lastCommittedSearch, setLastCommittedSearch] = useState(search);
+  if (search !== lastCommittedSearch) {
+    setLastCommittedSearch(search);
+    setSearchInput(search);
+  }
+
+  // Guards against out-of-order responses when filters change quickly: only
+  // the newest request may commit state. Also mirrors isFetching without
+  // synchronous setState inside the effect (see below).
+  const requestIdRef = useRef(0);
+  const pendingRef = useRef(false);
+
+  // Debounced commit of the search box into the URL (which drives the fetch).
+  // No `page` param exists in the URL anymore — resetting to page 1 happens
+  // automatically because the fetch effect always requests page 1.
+  useEffect(() => {
+    if (searchInput === search) return undefined;
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (searchInput.trim()) {
+        params.set("q", searchInput);
+      } else {
+        params.delete("q");
+      }
+      const query = params.toString();
+      router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
   const branchOptions = useMemo(
     () => [
       // "Both branches" = available at either branch (backend branch=both).
@@ -317,69 +219,104 @@ function ServicesContent() {
     () => [{ id: "all", name: "All Services" }, ...categories],
     [categories],
   );
+  const selectedCategory = categoryParam || "all";
+  const selectedSubCategory = subCategoryParam || "all";
 
-  const categoryParam = searchParams.get("category");
-  const selectedCategory =
-    categoryParam && allCategories.some((c) => c.id === categoryParam)
-      ? categoryParam
-      : "all";
+  // Sub-category chips come from the server's facet counts. They're only
+  // shown when they belong to the currently selected category, so switching
+  // categories never flashes the previous category's chips.
+  const availableSubCategories =
+    facetCategory === selectedCategory ? subCategories : [];
 
-  // Loading state: true on mount and whenever the branch selection changes,
-  // derived from the fetch sequence rather than a setState inside the effect.
-  const [fetchedBranch, setFetchedBranch] = useState(branchParam);
-  const servicesLoading = fetchedBranch !== branchParam;
-
+  // ---- Server-backed fetching (page 1 / filter changes) ---------------------
+  // Runs on mount and whenever any filter/search/sort changes. ALWAYS requests
+  // page 1 and REPLACES the whole list — filter changes must never append.
+  // Out-of-order responses are dropped via requestIdRef; isFetching is
+  // mirrored via pendingRef and cleared in the commit callbacks.
   useEffect(() => {
-    let active = true;
+    const requestId = ++requestIdRef.current;
+    pendingRef.current = true;
+    pageRef.current = 1;
 
-    Promise.all([
-      // The backend filters via service_branches. "Both branches" (default)
-      // maps to branch=both — available at either branch.
-      getServices({
-        status: "Active",
-        branch: selectedBranch === "all" ? "both" : selectedBranch,
-      }),
-      getCategories(),
-      getBranches(),
-    ])
-      .then(([serviceData, categoryData, branchData]) => {
-        if (!active) return;
-        setServices(serviceData);
-        setCategories(categoryData);
-        setBranches(branchData);
-        setFetchedBranch(branchParam);
+    // Metadata + booking catalogue resolve independently so a failure in one
+    // doesn't blank the page. Cached (60s) after the first visit.
+    getCategoriesCached()
+      .then((data) => {
+        if (requestIdRef.current === requestId) setCategories(data);
       })
-      .catch(() => {
-        if (active) {
-          setServicesError("Unable to load services and locations.");
-          setFetchedBranch(branchParam);
+      .catch(() => {});
+
+    getBranchesCached()
+      .then((data) => {
+        if (requestIdRef.current === requestId) setBranches(data);
+      })
+      .catch(() => {});
+
+    getAllActiveServices()
+      .then((data) => {
+        if (requestIdRef.current === requestId) setAllServices(data);
+      })
+      .catch(() => {});
+
+    // Current filter shape, shared by the page-1 fetch, View More, and the
+    // retry action — so every request carries the SAME filters.
+    const filters = {
+      limit: SERVICES_PAGE_SIZE,
+      search,
+      category: selectedCategory !== "all" ? selectedCategory : undefined,
+      subCategory:
+        selectedSubCategory !== "all" ? selectedSubCategory : undefined,
+      branch: selectedBranch === "all" ? "both" : selectedBranch,
+      sort: SORT_PARAMS[sortBy] ?? "menu",
+    };
+    filtersRef.current = filters;
+
+    getServicesPage({ ...filters, page: 1 })
+      .then((result) => {
+        if (requestIdRef.current !== requestId) return;
+        setServices(result.services);
+        setPage(1);
+        setHasMore(
+          result.services.length > 0 &&
+            (!result.pagination ||
+              result.pagination.page < result.pagination.totalPages),
+        );
+        setPagination(result.pagination);
+        if (result.subCategories) {
+          setSubCategories(result.subCategories);
+          setFacetCategory(selectedCategory);
         }
+        pendingRef.current = false;
+        setIsFetching(false);
+      })
+      .catch((error) => {
+        if (requestIdRef.current !== requestId) return;
+        pendingRef.current = false;
+        if (error?.name === "AbortError") return;
+        setServicesError(
+          "Unable to load services right now. Please try again.",
+        );
+        setIsFetching(false);
       });
 
-    return () => {
-      active = false;
-    };
-  }, [selectedBranch, branchParam]);
-
-  const subCategoryParam = searchParams.get("subCategory");
-  const categoryServices = services.filter(
-    (service) =>
-      selectedCategory !== "all" && service.categoryId === selectedCategory,
-  );
-  const subCategoryCounts = categoryServices.reduce((counts, service) => {
-    if (service.subCategory) {
-      counts[service.subCategory] = (counts[service.subCategory] ?? 0) + 1;
-    }
-    return counts;
-  }, {});
-  const availableSubCategories = Object.entries(subCategoryCounts).map(
-    ([name, count]) => ({ name, count }),
-  );
-  const selectedSubCategory = availableSubCategories.some(
-    (subCategory) => subCategory.name === subCategoryParam,
-  )
-    ? subCategoryParam
-    : "all";
+    // While a new request is pending, the grid dims (stale-while-revalidate);
+    // this async pass only flips flags back when a response commits. A filter
+    // change also cancels any pending View More request (its requestId is now
+    // stale) so the in-progress "Loading…" state resets here.
+    Promise.resolve().then(() => {
+      if (requestIdRef.current === requestId && pendingRef.current) {
+        setIsFetching(true);
+        setLoadingMore(false);
+      }
+    });
+  }, [
+    search,
+    selectedCategory,
+    selectedSubCategory,
+    selectedBranch,
+    sortBy,
+    retryCount,
+  ]);
 
   const updateParams = (updates) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -393,17 +330,24 @@ function ServicesContent() {
       }
     });
 
+    // Any filter/search/sort change restarts the list at page 1.
+    const resetsPagination = !("page" in updates);
+    if (resetsPagination) params.delete("page");
+
     const query = params.toString();
+    // Keep the committed-search mirror in sync so the render-time input reset
+    // above doesn't fight the user's typing right after a manual updateParams.
+    if (updates.q !== undefined) setLastCommittedSearch(updates.q ?? "");
     router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
   };
 
   const handleSelectCategory = (id) =>
     updateParams({ category: id, subCategory: "all" });
   const handleSelectSubCategory = (name) => updateParams({ subCategory: name });
-  const handleSearchChange = (value) => updateParams({ q: value });
   const handleSortChange = (value) => updateParams({ sort: value });
   const handleBranchChange = (value) => updateParams({ branch: value });
 
+  // Booking flow state (unchanged behavior).
   const [bookingService, setBookingService] = useState(null);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [pendingBooking, setPendingBooking] = useState(null);
@@ -461,78 +405,69 @@ function ServicesContent() {
     setServiceToAdd(null);
   };
 
+  const handleRetry = () => {
+    // Drop cached/pending responses (a failed request must not be re-joined)
+    // and re-run the fetch effect.
+    clearServicesCache();
+    setRetryCount((count) => count + 1);
+  };
+
+  // ---- View More (append-only) ----------------------------------------------
+  // Fetches the NEXT page with the exact same filter shape as page 1 (kept in
+  // filtersRef), appends with id-based dedup, and never touches the URL.
+  // Errors keep every previously loaded card on screen and leave the button
+  // enabled so the same page can be retried (page is NOT incremented).
+  const handleLoadMore = () => {
+    if (loadingMore || isFetching || !hasMore) return;
+
+    const requestId = ++requestIdRef.current;
+    const nextPage = pageRef.current + 1;
+    setLoadingMore(true);
+
+    getServicesPage({ ...filtersRef.current, page: nextPage })
+      .then((result) => {
+        if (requestIdRef.current !== requestId) return;
+        // Defensive dedup by real service id — normal pagination never
+        // repeats rows (deterministic ORDER BY + id tiebreaker), this only
+        // guards against edge cases like concurrent filter resets.
+        setServices((prev) => {
+          const existingIds = new Set(prev.map((service) => service.id));
+          const unique = result.services.filter(
+            (service) => !existingIds.has(service.id),
+          );
+          return [...prev, ...unique];
+        });
+        pageRef.current = nextPage;
+        setPage(nextPage);
+        const more =
+          result.services.length > 0 &&
+          (!result.pagination ||
+            result.pagination.page < result.pagination.totalPages);
+        setHasMore(more);
+        if (result.pagination) setPagination(result.pagination);
+        setLoadingMore(false);
+      })
+      .catch(() => {
+        if (requestIdRef.current !== requestId) return;
+        // Keep existing services + the button; page stays the same so the
+        // click retries the same page.
+        setLoadingMore(false);
+      });
+  };
+
   const selectedCategoryName =
     selectedCategory !== "all"
       ? allCategories.find((c) => c.id === selectedCategory)?.name
       : null;
 
-  const filteredServices = useMemo(() => {
-    let result = [...services];
-
-    // Category filter — match on categoryId, not the display-name category field.
-    if (selectedCategory !== "all") {
-      result = result.filter(
-        (service) => service.categoryId === selectedCategory,
-      );
-    }
-
-    if (selectedSubCategory !== "all") {
-      result = result.filter(
-        (service) => service.subCategory === selectedSubCategory,
-      );
-    }
-
-    if (selectedBranch !== "all") {
-      // The API already restricts services to the selected branch via
-      // service_branches; this client-side guard only trims stale rows while
-      // a re-fetch is in flight. branchIds holds branch slugs (see
-      // lib/admin/services.js mapServiceRow).
-      result = result.filter((service) =>
-        service.branchIds?.includes(selectedBranch),
-      );
-    }
-
-    // Search
-    if (search.trim()) {
-      const query = search.toLowerCase().trim();
-
-      result = result.filter((service) =>
-        [
-          service.name,
-          service.category,
-          service.subCategory,
-          service.gender,
-          service.description,
-        ]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(query)),
-      );
-    }
-
-    // Sorting
-    if (sortBy === "price-low") {
-      result.sort((a, b) => getMinPrice(a) - getMinPrice(b));
-    } else if (sortBy === "price-high") {
-      result.sort((a, b) => getMaxPrice(b) - getMaxPrice(a));
-    } else if (sortBy === "name") {
-      result.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    // "menu" keeps the original catalog order — no sort needed.
-
-    return result;
-  }, [
-    services,
-    search,
-    selectedCategory,
-    selectedSubCategory,
-    selectedBranch,
-    sortBy,
-  ]);
+  // Initial load = nothing to show yet → full skeleton. Refetches with data
+  // already on screen keep the layout stable and just dim it (aria-busy).
+  const initialLoading = isFetching && services.length === 0 && !servicesError;
 
   return (
     <>
       <ServicesHero
-        serviceCount={services.length}
+        serviceCount={pagination?.total ?? services.length}
         categoryCount={categories.length}
         branches={branches}
       />
@@ -630,9 +565,10 @@ function ServicesContent() {
 
                 <input
                   type="text"
-                  value={search}
-                  onChange={(e) => handleSearchChange(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search services, e.g. balayage, pedicure"
+                  aria-label="Search services"
                   className="h-12 w-full rounded-xl border border-[#DCE8E5] bg-white pl-11 pr-4 text-sm text-[#173B38] outline-none transition-colors placeholder:text-[#8A9996] focus:border-[#218F87]"
                 />
               </div>
@@ -666,6 +602,7 @@ function ServicesContent() {
                 <select
                   value={sortBy}
                   onChange={(e) => handleSortChange(e.target.value)}
+                  aria-label="Sort services"
                   className="h-12 w-full appearance-none rounded-xl border border-[#DCE8E5] bg-white px-4 pr-10 text-sm font-medium text-[#173B38] outline-none focus:border-[#218F87]"
                 >
                   <option value="menu">Menu Order</option>
@@ -734,7 +671,7 @@ function ServicesContent() {
             <div className="mb-5 flex items-center justify-between">
               <p className="text-sm text-[#647572]">
                 <span className="font-semibold text-[#173B38]">
-                  {filteredServices.length}
+                  {pagination ? pagination.total : "…"}
                 </span>{" "}
                 services
                 {selectedCategoryName && (
@@ -750,20 +687,74 @@ function ServicesContent() {
             </div>
 
             {/* Service Grid */}
-            {servicesLoading ? (
-              <p className="text-sm text-[#647572]">Loading services…</p>
+            {initialLoading ? (
+              <ServicesGridSkeleton count={6} />
             ) : servicesError ? (
-              <p className="text-sm text-[#A94B4B]">{servicesError}</p>
-            ) : filteredServices.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {filteredServices.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    onBook={handleBook}
-                  />
-                ))}
+              <div
+                role="alert"
+                className="rounded-2xl border border-[#F3C9C0] bg-[#FDF6F4] px-6 py-16 text-center"
+              >
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FBEBE7] text-[#B23B23]">
+                  <AlertCircle size={24} />
+                </div>
+
+                <h2 className="mt-5 text-lg font-semibold text-[#173B38]">
+                  Unable to load services right now.
+                </h2>
+
+                <p className="mt-2 text-sm text-[#647572]">
+                  Please check your connection and try again.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="mt-5 rounded-full bg-[#218F87] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#197B74]"
+                >
+                  Try Again
+                </button>
               </div>
+            ) : services.length > 0 ? (
+              <>
+                <div
+                  aria-busy={isFetching}
+                  className={`grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200 ${
+                    isFetching ? "opacity-50" : "opacity-100"
+                  }`}
+                >
+                  {services.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      onBook={handleBook}
+                    />
+                  ))}
+                </div>
+
+                {/* View More — append-only; page numbers are intentionally not
+                    shown anywhere in the UI. */}
+                {(hasMore || loadingMore) && (
+                  <div className="mt-10 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                      aria-busy={loadingMore}
+                      className="rounded-full border border-[#218F87] bg-white px-8 py-3 text-sm font-medium text-[#218F87] transition-all duration-300 hover:bg-[#218F87] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#218F87] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loadingMore ? "Loading…" : "View More"}
+                    </button>
+                  </div>
+                )}
+
+                {/* Skeletons for the incoming batch only — existing cards stay
+                    fully visible and interactive while loading more. */}
+                {loadingMore && (
+                  <div aria-hidden="true" className="mt-10">
+                    <ServicesGridSkeleton count={3} />
+                  </div>
+                )}
+              </>
             ) : (
               <div className="rounded-2xl border border-[#DCE8E5] bg-white px-6 py-16 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF6F4] text-[#218F87]">
@@ -771,7 +762,7 @@ function ServicesContent() {
                 </div>
 
                 <h2 className="mt-5 text-lg font-semibold text-[#173B38]">
-                  No services found
+                  No services found matching your selected filters.
                 </h2>
 
                 <p className="mt-2 text-sm text-[#647572]">
@@ -794,7 +785,7 @@ function ServicesContent() {
       {isBookingOpen && bookingService && (
         <CurrentBookingModal
           service={bookingService}
-          allServices={services}
+          allServices={allServices ?? services}
           categories={allCategories}
           branches={branches}
           bookingState={pendingBooking}

@@ -11,6 +11,7 @@
 // label and `branchIds`) without silently dropping fields.
 import api from "@/lib/api";
 import { branchIdsToLabel } from "./config";
+import { clearServicesCache } from "@/lib/services";
 
 // Map an API service row (snake_case from MySQL) into the existing frontend
 // service shape used by admin components and the booking flow.
@@ -121,6 +122,7 @@ function toBackendPayload(data) {
 // POST /api/services
 export async function createService(data) {
   const payload = await api.post("/api/services", toBackendPayload(data));
+  clearServicesCache(); // public Services page reflects the change immediately
   return extractOne(payload);
 }
 
@@ -130,6 +132,7 @@ export async function updateService(id, data) {
     `/api/services/${encodeURIComponent(id)}`,
     toBackendPayload(data),
   );
+  clearServicesCache();
   return extractOne(payload);
 }
 
@@ -139,6 +142,7 @@ export async function updateServiceStatus(id, status) {
     `/api/services/${encodeURIComponent(id)}/status`,
     { status },
   );
+  clearServicesCache();
   return extractOne(payload);
 }
 
@@ -146,6 +150,7 @@ export async function updateServiceStatus(id, status) {
 export async function deleteService(id) {
   try {
     await api.delete(`/api/services/${encodeURIComponent(id)}`);
+    clearServicesCache();
     return true;
   } catch (error) {
     if (error?.status === 404) return false;

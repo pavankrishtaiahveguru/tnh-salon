@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown } from "lucide-react";
+import { prefetchFirstServicesPage, prefetchServicesMeta } from "@/lib/services";
 
 const navLinks = [
   { name: "Services", href: "/services" },
@@ -69,6 +70,18 @@ export default function Navbar() {
     [pathname, hash],
   );
 
+  // Phase 12 — when the user is anywhere on the public site and hovers or
+  // focuses the Services nav link, prefetch the first Services API page and
+  // its metadata so clicking navigates into an already-warm cache. Next.js
+  // <Link> already prefetches the route itself in production; this warms the
+  // data layer, which route prefetch cannot do. Bounded to one request per
+  // cache window by the TTL cache in lib/services.js.
+  const handleServicesPrefetch = useCallback(() => {
+    if (pathname?.startsWith("/services")) return;
+    prefetchFirstServicesPage();
+    prefetchServicesMeta();
+  }, [pathname]);
+
   const isBranchesActive = pathname?.startsWith("/branches");
 
   return (
@@ -115,6 +128,8 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
+                onMouseEnter={handleServicesPrefetch}
+                onFocus={handleServicesPrefetch}
                 className="group relative inline-block py-1 text-[17px] font-medium transition-colors duration-300 ease-in-out"
                 style={{ color: active ? TEAL : DARK_GREEN }}
               >
@@ -236,7 +251,10 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                onClick={closeMenu}
+                onClick={() => {
+                  closeMenu();
+                  handleServicesPrefetch();
+                }}
                 className="relative flex items-center border-b border-border py-4 text-base font-medium transition-colors duration-300"
                 style={{ color: active ? TEAL : DARK_GREEN }}
               >
