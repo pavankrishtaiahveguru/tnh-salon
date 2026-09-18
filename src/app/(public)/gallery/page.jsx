@@ -5,188 +5,247 @@ import Image from "next/image";
 
 const galleryItems = [
   {
+    type: "video",
+    category: "MIX",
+    src: "https://res.cloudinary.com/eumjdehq/video/upload/v1789723022/Mix.mp4",
+    alt: "Skin care at The Nail Hue",
+    size: "portrait",
+  },
+  {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair1.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724022/hair1.jpg",
     alt: "Hair styling at The Nail Hue",
     size: "large",
   },
   {
+    type: "video",
     category: "Hair",
-    src: "/images/gallery/hair2.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/video/upload/v1789723009/hair.mp4",
+    alt: "Hair care at The Nail Hue",
+    size: "portrait",
+  },
+  {
+    type: "image",
+    category: "Hair",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724007/hair2.jpg",
     alt: "Hair transformation at The Nail Hue",
     size: "large",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair3.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724012/hair3.jpg",
     alt: "Hair colour at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair4.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723991/hair4.jpg",
     alt: "Hair styling transformation",
     size: "small",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair6.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724056/hair6.jpg",
     alt: "Hair styling at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair7.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724008/hair7.jpg",
     alt: "Hair styling transformation at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair8.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723996/hair8.jpg",
     alt: "Hair styling at The Nail Hue",
     size: "large",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair9.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723975/hair9.jpg",
     alt: "Hair makeover at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair11.JPG",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724003/hair11.jpg",
     alt: "Hair styling at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair12.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723974/hair12.jpg",
     alt: "Hair transformation at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair13.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723981/hair13.jpg",
     alt: "Hair styling at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair14.JPG",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723964/hair14.jpg",
     alt: "Hair makeover at The Nail Hue",
     size: "large",
   },
   {
+    type: "image",
     category: "Hair",
-    src: "/images/gallery/hair15.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789723953/hair15.jpg",
     alt: "Hair styling transformation",
     size: "medium",
   },
 
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/Nails.JPG",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724154/Nails.jpg",
     alt: "Nail art at The Nail Hue",
     size: "large",
   },
   {
+    type: "video",
     category: "Nails",
-    src: "/images/gallery/nails1.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/video/upload/v1789722842/Nails_1.mp4",
+    alt: "Nail care at The Nail Hue",
+    size: "portrait",
+  },
+  {
+    type: "image",
+    category: "Nails",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724152/nails1.jpg",
     alt: "Nail art at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails2.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724160/nails2.jpg",
     alt: "Nail styling at The Nail Hue",
     size: "small",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails3.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724063/nails3.jpg",
     alt: "Nail art at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails4.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724056/nails4.jpg",
     alt: "Nail art at The Nail Hue",
     size: "small",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails5.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724051/nails5.jpg",
     alt: "Nail styling at The Nail Hue",
     size: "large",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails6.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724050/nails6.jpg",
     alt: "Nail art at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails7.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724041/nails7.jpg",
     alt: "Nail art at The Nail Hue",
     size: "large",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails8.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724075/nails8.jpg",
     alt: "Nail styling at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails9.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724065/nails9.jpg",
     alt: "Nail art at The Nail Hue",
     size: "large",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails10.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724037/nails10.jpg",
     alt: "Nail styling at The Nail Hue",
     size: "small",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails11.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724089/nails11.jpg",
     alt: "Nail art at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Nails",
-    src: "/images/gallery/nails13.jpeg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724025/nails13.jpg",
     alt: "Nail styling at The Nail Hue",
     size: "small",
   },
 
   {
+    type: "image",
     category: "Skin",
-    src: "/images/gallery/skin1.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724184/skin1.jpg",
     alt: "Skin treatment at The Nail Hue",
     size: "large",
   },
   {
+    type: "video",
     category: "Skin",
-    src: "/images/gallery/skin2.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/video/upload/v1789722755/skin.mp4",
+    alt: "Skin care at The Nail Hue",
+    size: "portrait",
+  },
+  {
+    type: "image",
+    category: "Skin",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724180/skin2.jpg",
     alt: "Skin care treatment at The Nail Hue",
     size: "medium",
   },
   {
+    type: "image",
     category: "Skin",
-    src: "/images/gallery/skin3.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724180/skin3.jpg",
     alt: "Skin treatment at The Nail Hue",
     size: "small",
   },
   {
+    type: "image",
     category: "Skin",
-    src: "/images/gallery/skin4.jpg",
+    src: "https://res.cloudinary.com/eumjdehq/image/upload/v1789724184/skin4.jpg",
     alt: "Skin care at The Nail Hue",
     size: "portrait",
   },
 ];
+
 export default function GalleryPage() {
   const [activeFilter, setActiveFilter] = useState("All");
 
@@ -287,6 +346,9 @@ function GalleryCard({ item, index }) {
         : item.size === "portrait"
           ? "aspect-[2/3]"
           : "aspect-[4/3]";
+
+  const isVideo = item.type === "video";
+
   return (
     <div
       className="group mb-4 break-inside-avoid overflow-hidden rounded-2xl bg-white p-2 shadow-[0_10px_35px_rgba(23,59,56,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(23,59,56,0.14)] lg:mb-5"
@@ -294,28 +356,53 @@ function GalleryCard({ item, index }) {
         animationDelay: `${index * 80}ms`,
       }}
     >
-      {/* Image */}
       <div
         className={`relative w-full overflow-hidden rounded-xl bg-[#EEF3F1] ${aspectRatio}`}
       >
-        <Image
-          src={item.src}
-          alt={item.alt}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
-          priority={index < 3}
-        />
+        {/* IMAGE */}
+        {!isVideo && (
+          <img
+            src={item.src}
+            alt={item.alt}
+            loading={index < 3 ? "eager" : "lazy"}
+            fetchPriority={index < 3 ? "high" : "auto"}
+            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+        )}
+
+        {/* VIDEO */}
+        {isVideo && (
+          <video
+            src={item.src}
+            className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload={index < 3 ? "auto" : "metadata"}
+          />
+        )}
 
         {/* Soft Overlay */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#173B38]/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
         {/* Category */}
-        <div className="absolute left-3 top-3">
-          <span className="inline-flex rounded-full border border-white/30 bg-[#173B38]/70 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white opacity-0 backdrop-blur-md transition-all duration-500 group-hover:opacity-100">
-            {item.category}
-          </span>
-        </div>
+        {item.category && item.category !== "All" && (
+          <div className="absolute left-3 top-3">
+            <span className="inline-flex rounded-full border border-white/30 bg-[#173B38]/70 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white opacity-0 backdrop-blur-md transition-all duration-500 group-hover:opacity-100">
+              {item.category}
+            </span>
+          </div>
+        )}
+
+        {/* Video Indicator */}
+        {isVideo && (
+          <div className="pointer-events-none absolute bottom-3 right-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-[#173B38]/70 text-sm text-white backdrop-blur-md">
+              ▶
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

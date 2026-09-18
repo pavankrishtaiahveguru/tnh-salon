@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-const videos = ["/videos/salon-1.mp4", "/videos/salon-2.mp4"];
+const videos = [
+  "https://res.cloudinary.com/eumjdehq/video/upload/v1789723872/salon-1.mov",
+  "https://res.cloudinary.com/eumjdehq/video/upload/v1789723717/salon-2.mp4",
+];
 
 export default function Hero() {
   const [activeVideo, setActiveVideo] = useState(0);
