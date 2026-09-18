@@ -37,7 +37,6 @@ import { getBranches } from "@/lib/branches";
 import {
   areServicesAvailableAtStudio,
   isServiceAvailableAtStudio,
-  normalizeBranch,
 } from "@/components/services/bookingUtils";
 
 // Icon fallback for each category (used only if category.image isn't provided).
@@ -297,12 +296,15 @@ function ServicesContent() {
   const [categories, setCategories] = useState([]);
   const [services, setServices] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState("");
 
   const branchParam = searchParams.get("branch") ?? "all";
   const branchOptions = useMemo(
-    () => [{ id: "all", name: "All branches" }, ...branches],
+    () => [
+      // "Both branches" = available at either branch (backend branch=both).
+      { id: "all", name: "Both branches" },
+      ...branches,
+    ],
     [branches],
   );
   const selectedBranch = branchOptions.some(
@@ -322,11 +324,21 @@ function ServicesContent() {
       ? categoryParam
       : "all";
 
+  // Loading state: true on mount and whenever the branch selection changes,
+  // derived from the fetch sequence rather than a setState inside the effect.
+  const [fetchedBranch, setFetchedBranch] = useState(branchParam);
+  const servicesLoading = fetchedBranch !== branchParam;
+
   useEffect(() => {
     let active = true;
 
     Promise.all([
-      getServices({ status: "Active" }),
+      // The backend filters via service_branches. "Both branches" (default)
+      // maps to branch=both — available at either branch.
+      getServices({
+        status: "Active",
+        branch: selectedBranch === "all" ? "both" : selectedBranch,
+      }),
       getCategories(),
       getBranches(),
     ])
@@ -335,18 +347,19 @@ function ServicesContent() {
         setServices(serviceData);
         setCategories(categoryData);
         setBranches(branchData);
+        setFetchedBranch(branchParam);
       })
       .catch(() => {
-        if (active) setServicesError("Unable to load services and locations.");
-      })
-      .finally(() => {
-        if (active) setServicesLoading(false);
+        if (active) {
+          setServicesError("Unable to load services and locations.");
+          setFetchedBranch(branchParam);
+        }
       });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedBranch, branchParam]);
 
   const subCategoryParam = searchParams.get("subCategory");
   const categoryServices = services.filter(
@@ -470,17 +483,13 @@ function ServicesContent() {
     }
 
     if (selectedBranch !== "all") {
-      const selectedBranchName = branchOptions.find(
-        (branch) => branch.id === selectedBranch,
-      )?.name;
-      result = result.filter((service) => {
-        if (service.branchIds?.includes(selectedBranch)) return true;
-        const serviceBranch = normalizeBranch(service.branch);
-        return (
-          serviceBranch === "both branches" ||
-          serviceBranch === normalizeBranch(selectedBranchName)
-        );
-      });
+      // The API already restricts services to the selected branch via
+      // service_branches; this client-side guard only trims stale rows while
+      // a re-fetch is in flight. branchIds holds branch slugs (see
+      // lib/admin/services.js mapServiceRow).
+      result = result.filter((service) =>
+        service.branchIds?.includes(selectedBranch),
+      );
     }
 
     // Search
@@ -517,7 +526,6 @@ function ServicesContent() {
     selectedCategory,
     selectedSubCategory,
     selectedBranch,
-    branchOptions,
     sortBy,
   ]);
 

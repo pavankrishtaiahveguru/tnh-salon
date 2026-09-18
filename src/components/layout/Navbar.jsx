@@ -12,7 +12,7 @@ const navLinks = [
 ];
 
 const secondaryLinks = [
-  // { name: "Academy", href: "/academy" },
+  { name: "Academy", href: "/academy" },
   { name: "Founder", href: "/founder" },
 ];
 

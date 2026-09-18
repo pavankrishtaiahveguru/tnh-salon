@@ -38,7 +38,7 @@ const galleryItems = [
     category: "Hair",
     src: "/images/gallery/hair7.jpeg",
     alt: "Hair styling transformation at The Nail Hue",
-    size: "small",
+    size: "medium",
   },
   {
     category: "Hair",
@@ -56,7 +56,7 @@ const galleryItems = [
     category: "Hair",
     src: "/images/gallery/hair11.JPG",
     alt: "Hair styling at The Nail Hue",
-    size: "small",
+    size: "medium",
   },
   {
     category: "Hair",
@@ -68,7 +68,7 @@ const galleryItems = [
     category: "Hair",
     src: "/images/gallery/hair13.jpg",
     alt: "Hair styling at The Nail Hue",
-    size: "small",
+    size: "medium",
   },
   {
     category: "Hair",
@@ -82,7 +82,6 @@ const galleryItems = [
     alt: "Hair styling transformation",
     size: "medium",
   },
-
 
   {
     category: "Nails",
@@ -130,7 +129,7 @@ const galleryItems = [
     category: "Nails",
     src: "/images/gallery/nails7.jpg",
     alt: "Nail art at The Nail Hue",
-    size: "small",
+    size: "large",
   },
   {
     category: "Nails",
@@ -185,7 +184,7 @@ const galleryItems = [
     category: "Skin",
     src: "/images/gallery/skin4.jpg",
     alt: "Skin care at The Nail Hue",
-    size: "medium",
+    size: "portrait",
   },
 ];
 export default function GalleryPage() {
@@ -249,7 +248,8 @@ export default function GalleryPage() {
         </div>
 
         {/* Masonry Gallery */}
-        <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3 lg:gap-5">
+        <div className="mt-12 columns-1 gap-4 sm:columns-2 lg:columns-3 lg:gap-4">
+          {" "}
           {filteredItems.map((item, index) => (
             <GalleryCard
               key={`${item.src}-${index}`}
@@ -279,6 +279,14 @@ export default function GalleryPage() {
 }
 
 function GalleryCard({ item, index }) {
+  const aspectRatio =
+    item.size === "large"
+      ? "aspect-[4/5]"
+      : item.size === "medium"
+        ? "aspect-square"
+        : item.size === "portrait"
+          ? "aspect-[2/3]"
+          : "aspect-[4/3]";
   return (
     <div
       className="group mb-4 break-inside-avoid overflow-hidden rounded-2xl bg-white p-2 shadow-[0_10px_35px_rgba(23,59,56,0.08)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(23,59,56,0.14)] lg:mb-5"
@@ -288,24 +296,18 @@ function GalleryCard({ item, index }) {
     >
       {/* Image */}
       <div
-        className={`relative w-full overflow-hidden rounded-xl bg-[#EEF3F1] ${
-          item.size === "large"
-            ? "aspect-[4/5]"
-            : item.size === "medium"
-              ? "aspect-[4/3]"
-              : "aspect-[16/9]"
-        }`}
+        className={`relative w-full overflow-hidden rounded-xl bg-[#EEF3F1] ${aspectRatio}`}
       >
         <Image
           src={item.src}
           alt={item.alt}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
           priority={index < 3}
         />
 
-        {/* Image Overlay */}
+        {/* Soft Overlay */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#173B38]/50 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
         {/* Category */}

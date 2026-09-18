@@ -4,7 +4,7 @@ export default function BranchAbout({ branch }) {
   const isIndiranagar = branch.name === "Indiranagar";
 
   return (
-    <section className="bg-black px-6 py-20 text-white sm:px-10 md:py-24 lg:px-16 lg:py-32">
+    <section className="bg-[#294946] px-6 py-20 text-white sm:px-10 md:py-24 lg:px-16 lg:py-32">
       <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
         {/* Content */}
         <div>

@@ -41,6 +41,8 @@ export function normalizeBranch(value) {
   if (
     normalized === "sarjapur" ||
     normalized === "sarjapur road" ||
+    normalized === "sarjapura" ||
+    normalized === "sarjapura road" ||
     normalized === "sarjapur branch"
   ) {
     return "sarjapur road";

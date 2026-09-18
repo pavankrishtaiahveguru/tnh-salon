@@ -2,6 +2,9 @@ import api from "@/lib/api";
 
 function mapBranch(row) {
   return {
+    // Keep the numeric DB id (branchId) available for lookups while `id`
+    // stays the slug — admin screens key branches by slug.
+    branchId: row.id,
     ...row,
     id: row.slug ?? String(row.id),
     hours: row.hours ?? { weekdays: "", weekends: "" },

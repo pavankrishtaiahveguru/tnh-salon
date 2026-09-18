@@ -4,49 +4,46 @@ import { ArrowRight } from "lucide-react";
 
 const services = [
   {
-    name: "Hair Cut and Styling",
+    name: "Hair Colour & Colour Correction",
     category: "Hair",
-    image: "/images/services/hair-cut-and-styling.jpg",
-  },
-  {
-    name: "Hair Colour",
-    category: "Hair",
+    description:
+      "Professional hair colour services including balayage, global colour, grey coverage, grey blending and colour correction. Every colour service begins with a consultation to understand your existing colour, hair history and desired result.",
     image: "/images/services/hair-colour.jpg",
   },
   {
-    name: "Hair Spa",
-    category: "Hair",
-    image: "/images/services/hair-colour.jpg",
-  },
-  {
-    name: "Pedi",
+    name: "Nails — Manicure, Pedicure, Extensions & Nail Art",
     category: "Nails",
-    image: "/images/services/nail-art.jpg",
-  },
-  {
-    name: "Nail Extensions",
-    category: "Nails",
+    description:
+      "Manicure, Pedicure, nail extensions, BIAB, Russian manicure, Infills/Refills, safe nail removal and custom nail art including French, chrome and 3D designs.",
     image: "/images/services/nail-extensions.jpg",
   },
   {
-    name: "Nail Art",
-    category: "Nails",
-    image: "/images/services/nail.jpg",
+    name: "Hair Cut, Styling & Treatments",
+    category: "Hair",
+    description:
+      "Professional haircuts, styling, hair spa and treatments tailored to your hair type, condition and desired look.",
+    image: "/images/services/hair-cut-and-styling.jpg",
   },
   {
-    name: "Facial",
+    name: "Facials & Korean Skincare",
     category: "Skin",
+    description:
+      "Korean facials, hydrafacial and consultation-led skin treatments. We match the facial to your skin concern, not to a package.",
     image: "/images/services/facial.jpg",
   },
   {
-    name: "Cleanup",
+    name: "Waxing & De-Tan",
     category: "Skin",
+    description:
+      "Waxing and de-tan for face and body. Single-use spatulas, hygiene protocol shared openly, with appointments available at both studios.",
     image: "/images/services/pedi.jpg",
   },
   {
-    name: "D-Tan",
-    category: "Skin",
-    image: "/images/services/facial.jpg",
+    name: "Brows & Lashes",
+    category: "Beauty",
+    description:
+      "Brow mapping, threading, waxing, tinting and lash treatments at The Nail Hue, Indiranagar and Sarjapur Road. Shape planned to your face and growth pattern.",
+    image: "/images/services/brows-lashes.jpg",
   },
 ];
 
@@ -79,37 +76,51 @@ export default function Services() {
             <Link
               key={service.name}
               href="/services"
-              className="group relative overflow-hidden rounded-2xl bg-white shadow-[0_8px_30px_rgba(33,143,135,0.08)] ring-1 ring-[#218F87]/10 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_rgba(33,143,135,0.16)]"
+              className="group overflow-hidden rounded-2xl bg-white shadow-[0_8px_30px_rgba(33,143,135,0.08)] ring-1 ring-[#218F87]/10 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_rgba(33,143,135,0.16)]"
             >
-              {/* Category Badge */}
-              <div className="absolute left-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-[#218F87] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white shadow-md">
-                <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                {service.category}
-              </div>
-
               {/* Image */}
-              <div className="relative h-64 overflow-hidden sm:h-72">
+              <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
                   src={service.image}
-                  alt={`${service.name} at TNH Salon`}
+                  alt={`${service.name} at The Nail Hue`}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
-                {/* Image Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent" />
+
+                {/* Category */}
+                <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full bg-[#218F87] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.1em] text-white shadow-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  {service.category}
+                </div>
 
                 {/* Arrow */}
                 <div className="absolute right-4 top-4 flex h-10 w-10 translate-y-2 items-center justify-center rounded-full bg-white/90 text-[#218F87] opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                   <ArrowRight size={17} />
                 </div>
 
-                {/* Service Name */}
+                {/* Title */}
                 <div className="absolute bottom-0 left-0 w-full p-5">
-                  <h4 className="text-xl font-semibold text-white sm:text-2xl">
+                  <h4 className="text-xl font-semibold leading-tight text-white sm:text-2xl">
                     {service.name}
                   </h4>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="p-5">
+                <p className="text-sm leading-6 text-[#647572]">
+                  {service.description}
+                </p>
+
+                <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#218F87]">
+                  Explore Services
+                  <ArrowRight
+                    size={16}
+                    className="transition-transform duration-300 group-hover:translate-x-1"
+                  />
                 </div>
               </div>
             </Link>

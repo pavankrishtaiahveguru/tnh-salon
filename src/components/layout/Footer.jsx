@@ -12,10 +12,11 @@ import DevelopedByStaffArc from "../DevelopedByStaffArc";
 const quickLinks = [
   { name: "Services", href: "#services" },
   { name: "About", href: "#about" },
-  { name: "Gallery", href: "#gallery" },
-  { name: "Branches", href: "#branches" },
+  { name: "Gallery", href: "/gallery" },
+  // { name: "Branches", href: "/branches" },
   { name: "Academy", href: "/academy" },
-  { name: "Meet the Founder", href: "#founder" },
+  { name: "Meet the Founder", href: "/founder" },
+  { name: "Privacy Policy", href: "/privacy-policy" },
 ];
 
 export default function Footer() {
@@ -74,19 +75,6 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
-
-              <li>
-                <Link
-                  href="/book"
-                  className="group inline-flex items-center gap-1 text-sm text-white/80 transition-colors duration-300 hover:text-white"
-                >
-                  Book Now
-                  <FiArrowUpRight
-                    size={14}
-                    className="opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100"
-                  />
-                </Link>
-              </li>
             </ul>
           </div>
 
