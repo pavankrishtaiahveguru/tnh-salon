@@ -29,6 +29,10 @@ import {
 import ServicesHero from "@/components/services/ServicesHero";
 import ServiceCard from "@/components/services/ServiceCard";
 import ServicesGridSkeleton from "@/components/services/ServicesGridSkeleton";
+import {
+  CategoryGridSkeleton,
+  CategoryStripSkeleton,
+} from "@/components/services/ServiceCategoriesSkeleton";
 import CurrentBookingModal from "@/components/services/BookingModal";
 import PendingBookingBar from "@/components/services/PendingBookingBar";
 import {
@@ -219,6 +223,12 @@ function ServicesContent() {
     () => [{ id: "all", name: "All Services" }, ...categories],
     [categories],
   );
+
+  // Categories come from the API (getCategoriesCached) — a genuine loading
+  // state, so the category section shows skeletons until the first batch
+  // resolves. Once loaded it stays loaded; category selection never blanks
+  // the strip (service filtering is a grid-only loading state).
+  const categoriesLoading = categories.length === 0;
   const selectedCategory = categoryParam || "all";
   const selectedSubCategory = subCategoryParam || "all";
 
@@ -485,16 +495,20 @@ function ServicesContent() {
                 Service Categories
               </p>
 
-              <div className="grid grid-cols-3 gap-2.5">
-                {allCategories.map((category) => (
-                  <CategoryTile
-                    key={category.id}
-                    category={category}
-                    isSelected={selectedCategory === category.id}
-                    onSelect={handleSelectCategory}
-                  />
-                ))}
-              </div>
+              {categoriesLoading ? (
+                <CategoryGridSkeleton count={9} />
+              ) : (
+                <div className="grid grid-cols-3 gap-2.5">
+                  {allCategories.map((category) => (
+                    <CategoryTile
+                      key={category.id}
+                      category={category}
+                      isSelected={selectedCategory === category.id}
+                      onSelect={handleSelectCategory}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </aside>
 
@@ -502,56 +516,60 @@ function ServicesContent() {
           <div className="min-w-0">
             {/* Mobile Category Horizontal Scroll */}
             <div className="mb-3 lg:hidden overflow-hidden">
-              <div className="flex w-full gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-hide">
-                {allCategories.map((category) => {
-                  const Icon = CATEGORY_ICONS[category.id] ?? LayoutGrid;
-                  const isSelected = selectedCategory === category.id;
-                  return (
-                    <button
-                      key={category.id}
-                      type="button"
-                      onClick={() => handleSelectCategory(category.id)}
-                      className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xl border px-2.5 py-2 text-center transition-all ${
-                        isSelected
-                          ? "border-transparent bg-[#218F87] text-white"
-                          : "border-[#DCE8E5] bg-white text-[#173B38] hover:bg-[#EEF6F4]"
-                      }`}
-                    >
-                      <div
-                        className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ${
-                          isSelected ? "bg-white/15" : "bg-[#EEF6F4]"
-                        }`}
-                      >
-                        {category.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={category.image}
-                            alt={category.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <Icon
-                            size={14}
-                            className={
-                              isSelected ? "text-white" : "text-[#218F87]"
-                            }
-                          />
-                        )}
-                      </div>
-
-                      <span
-                        className={`text-[10px] leading-tight ${
+              {categoriesLoading ? (
+                <CategoryStripSkeleton count={6} />
+              ) : (
+                <div className="flex w-full gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-hide">
+                  {allCategories.map((category) => {
+                    const Icon = CATEGORY_ICONS[category.id] ?? LayoutGrid;
+                    const isSelected = selectedCategory === category.id;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => handleSelectCategory(category.id)}
+                        className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xl border px-2.5 py-2 text-center transition-all ${
                           isSelected
-                            ? "font-semibold text-white"
-                            : "font-medium text-[#173B38]"
+                            ? "border-transparent bg-[#218F87] text-white"
+                            : "border-[#DCE8E5] bg-white text-[#173B38] hover:bg-[#EEF6F4]"
                         }`}
                       >
-                        {category.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                        <div
+                          className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ${
+                            isSelected ? "bg-white/15" : "bg-[#EEF6F4]"
+                          }`}
+                        >
+                          {category.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={category.image}
+                              alt={category.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <Icon
+                              size={14}
+                              className={
+                                isSelected ? "text-white" : "text-[#218F87]"
+                              }
+                            />
+                          )}
+                        </div>
+
+                        <span
+                          className={`text-[10px] leading-tight ${
+                            isSelected
+                              ? "font-semibold text-white"
+                              : "font-medium text-[#173B38]"
+                          }`}
+                        >
+                          {category.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Search + Sort */}

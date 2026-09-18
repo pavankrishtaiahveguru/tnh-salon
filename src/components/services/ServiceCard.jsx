@@ -188,16 +188,16 @@ function ServiceCard({ service, onBook }) {
             <button
               type="button"
               onClick={openDetails}
-              className="flex-1 rounded-lg border border-[#CDE6E3] px-1.5 py-1.5 text-[9px] font-bold text-[#09221F] transition-colors hover:border-[#28B8B0] hover:bg-[#F3FAF9] sm:px-2 sm:py-2 sm:text-[11px]"
+              className="flex-1 rounded-lg bg-[#d4fffa] border border-[#25ffe6] px-1.5 py-1.5 text-[9px] font-bold text-[#09221F] transition-colors hover:border-[#28B8B0] hover:bg-[#F3FAF9] sm:px-2 sm:py-2 sm:text-[11px]"
             >
               View details
             </button>
 
             {/* BOOK */}
-            <button
+            <button 
               type="button"
               onClick={handleBookClick}
-              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#09221F] px-1.5 py-1.5 text-[9px] font-bold text-white transition-colors hover:bg-[#218F87] sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[11px]"
+              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#218F87] px-1.5 py-1.5 text-[9px] font-bold text-white transition-colors hover:bg-[#093c36] sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[11px]"
             >
               <Plus size={13} />
               Book
