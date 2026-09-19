@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 const videos = [
-  "https://res.cloudinary.com/eumjdehq/video/upload/v1789723872/salon-1.mov",
   "https://res.cloudinary.com/eumjdehq/video/upload/v1789723717/salon-2.mp4",
+  "https://res.cloudinary.com/eumjdehq/video/upload/v1789723872/salon-1.mov",
 ];
 
 export default function Hero() {
@@ -85,7 +85,7 @@ export default function Hero() {
           {/* Buttons */}
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/book"
+              href="/services"
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#27A399] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#218F87] hover:shadow-xl"
             >
               Book Your Appointment

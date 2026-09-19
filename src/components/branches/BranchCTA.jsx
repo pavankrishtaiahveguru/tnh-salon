@@ -31,7 +31,7 @@ export default function BranchCTA({ branch }) {
             {/* Actions */}
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
-                href="/book"
+                href="/services"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#27A399] px-7 py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:bg-[#218F87] hover:shadow-xl sm:w-auto"
               >
                 Book Your Appointment

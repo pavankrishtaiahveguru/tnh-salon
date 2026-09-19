@@ -21,14 +21,14 @@ export default function ServiceCategorySidebar({
 
   return (
     <aside className="relative w-full lg:w-[250px] lg:shrink-0">
-      {/* Mobile / Tablet */}
+      {/* Mobile / Tablet — responsive grid, no horizontal scrolling */}
       <div className="lg:hidden">
-        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-3">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4">
           {/* All Services */}
           <button
             type="button"
             onClick={() => setActiveCategory("all")}
-            className={`group flex w-[100px] shrink-0 flex-col text-left transition-all duration-300 ${
+            className={`group flex w-full min-w-0 flex-col text-left transition-all duration-300 ${
               activeCategory === "all" ? "scale-[1.02]" : ""
             }`}
           >
@@ -62,7 +62,7 @@ export default function ServiceCategorySidebar({
               key={category.id}
               type="button"
               onClick={() => setActiveCategory(category.id)}
-              className={`group flex w-[100px] shrink-0 flex-col text-left transition-all duration-300 ${
+              className={`group flex w-full min-w-0 flex-col text-left transition-all duration-300 ${
                 activeCategory === category.id ? "scale-[1.02]" : ""
               }`}
             >

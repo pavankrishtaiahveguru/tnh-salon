@@ -9,6 +9,7 @@ export default function BookingConfirmation({
   date,
   selectedTime,
   message,
+  whatsAppNumber,
   onOpenWhatsAppAgain,
   onDone,
   onClose,
@@ -65,7 +66,7 @@ export default function BookingConfirmation({
         </button>
 
         <p className="mt-1.5 text-center text-[9px] text-[#718785]">
-          Goes to {maskedWhatsAppNumber()}
+          Goes to {maskedWhatsAppNumber(whatsAppNumber)}
         </p>
 
         {/* Message preview */}

@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Link } from "lucide-react";
 import { Fraunces, Karla } from "next/font/google";
 
@@ -13,10 +17,7 @@ const karla = Karla({
   display: "swap",
 });
 
-const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_ACADEMY_WHATSAPP ||
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ||
-  "";
+const WHATSAPP_NUMBER = "919177185103";
 
 const whatsappMessage = (message) => {
   const number = WHATSAPP_NUMBER.replace(/\D/g, "");
@@ -27,6 +28,17 @@ const whatsappMessage = (message) => {
 
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 };
+
+// Hero media carousel — swap these placeholders for the final Cloudinary URLs.
+const academyHeroImages = [
+  "/academy/academy-001.jpg",
+  "/academy/academy-002.jpg",
+  "/academy/academy-003.jpg",
+  "/academy/academy-004.jpg",
+  "/academy/academy-005.jpg",
+];
+
+const HERO_SLIDE_INTERVAL_MS = 5000;
 
 const nailLevels = [
   {
@@ -265,6 +277,20 @@ function TrackHeading({ title, description }) {
 }
 
 export default function AcademyPage() {
+  const [currentImage, setCurrentImage] = useState(0);
+  const [isHeroPaused, setIsHeroPaused] = useState(false);
+
+  // Auto-rotate the hero carousel every 4s. The interval restarts on every
+  // image change, so a manual indicator click resets the countdown before
+  // rotation resumes. Paused while the customer hovers/focuses the hero.
+  useEffect(() => {
+    if (isHeroPaused) return undefined;
+    const id = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % academyHeroImages.length);
+    }, HERO_SLIDE_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [isHeroPaused, currentImage]);
+
   const generalWhatsApp = whatsappMessage(
     "Hi The Nail Hue Academy, I would like to discuss which level fits my experience. Here is what I do now:",
   );
@@ -336,17 +362,59 @@ export default function AcademyPage() {
 
             {/* Hero media */}
             <div className="mx-auto w-full max-w-[360px] lg:max-w-[380px]">
-              <div className="relative aspect-[0.78] overflow-hidden rounded-[48px] border border-white/15 bg-gradient-to-br from-[#174c47] via-[#14524d] to-[#0b3935] shadow-2xl">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(40,164,153,.2),transparent_55%)]" />
+              <div
+                className="relative aspect-[0.78] overflow-hidden rounded-[48px] border border-white/15 bg-gradient-to-br from-[#174c47] via-[#14524d] to-[#0b3935] shadow-2xl"
+                onMouseEnter={() => setIsHeroPaused(true)}
+                onMouseLeave={() => setIsHeroPaused(false)}
+                onFocus={() => setIsHeroPaused(true)}
+                onBlur={() => setIsHeroPaused(false)}
+              >
+                {/* Auto-rotating images — stacked crossfade, 4s per image */}
+                {academyHeroImages.map((src, index) => (
+                  <Image
+                    key={src}
+                    src={src}
+                    alt="The Nail Hue Academy training"
+                    fill
+                    priority={index === 0}
+                    sizes="(max-width: 1023px) calc(100vw - 40px), 380px"
+                    className={`object-cover transition-opacity duration-1000 ease-in-out ${
+                      index === currentImage ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                ))}
+
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(40,164,153,.2),transparent_55%)]" />
+
+                {/* Subtle bottom gradient so the label stays readable on any image */}
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#04302C]/60 via-[#04302C]/25 to-transparent" />
 
                 <div className="absolute bottom-5 left-5 right-5">
-                  <p className="text-xs font-bold tracking-[0.08em] text-white">
+                  {/* <p className="text-xs font-bold tracking-[0.08em] text-white">
                     HERO IMAGE / VIDEO — training on a live client
                   </p>
 
                   <p className="mt-1 text-[10px] text-white/50">
                     Advanced hair and nail training
-                  </p>
+                  </p> */}
+
+                  {/* Carousel indicators */}
+                  <div className="mt-2.5 flex justify-end gap-1.5">
+                    {academyHeroImages.map((src, index) => (
+                      <button
+                        key={src}
+                        type="button"
+                        aria-label={`Show training image ${index + 1}`}
+                        aria-current={index === currentImage}
+                        onClick={() => setCurrentImage(index)}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${
+                          index === currentImage
+                            ? "w-5 bg-white"
+                            : "w-1.5 bg-white/50 hover:bg-white/80"
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

@@ -485,7 +485,7 @@ function ServicesContent() {
       {/* Services Browsing Section */}
       <section
         id="service-categories"
-        className="mx-auto max-w-[1600px] bg-[#FFFDF9] px-5 pb-36 pt-8 sm:px-8 lg:px-12 lg:pb-32 lg:pt-12 xl:px-16"
+        className="mx-auto max-w-[1600px] bg-[#FFFDF9] px-5 pb-36 pt-28 sm:px-8 sm:pt-32 lg:px-12 lg:pb-32 lg:pt-12 xl:px-16"
       >
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
           {/* Desktop Sidebar */}
@@ -514,12 +514,16 @@ function ServicesContent() {
 
           {/* Services Area */}
           <div className="min-w-0">
-            {/* Mobile Category Horizontal Scroll */}
-            <div className="mb-3 lg:hidden overflow-hidden">
+            {/* Mobile / Tablet Category Grid — full grid, no horizontal scroll */}
+            <div className="mb-3 lg:hidden">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#647572]">
+                Service Categories
+              </p>
+
               {categoriesLoading ? (
-                <CategoryStripSkeleton count={6} />
+                <CategoryStripSkeleton count={15} />
               ) : (
-                <div className="flex w-full gap-3 overflow-x-auto pb-2 scroll-smooth scrollbar-hide">
+                <div className="grid w-full grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4">
                   {allCategories.map((category) => {
                     const Icon = CATEGORY_ICONS[category.id] ?? LayoutGrid;
                     const isSelected = selectedCategory === category.id;
@@ -528,7 +532,7 @@ function ServicesContent() {
                         key={category.id}
                         type="button"
                         onClick={() => handleSelectCategory(category.id)}
-                        className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xl border px-2.5 py-2 text-center transition-all ${
+                        className={`flex w-full min-w-0 flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-all ${
                           isSelected
                             ? "border-transparent bg-[#218F87] text-white"
                             : "border-[#DCE8E5] bg-white text-[#173B38] hover:bg-[#EEF6F4]"
@@ -557,7 +561,7 @@ function ServicesContent() {
                         </div>
 
                         <span
-                          className={`text-[10px] leading-tight ${
+                          className={`text-[10px] leading-tight sm:text-[11px] ${
                             isSelected
                               ? "font-semibold text-white"
                               : "font-medium text-[#173B38]"

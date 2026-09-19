@@ -218,7 +218,7 @@ export default function Navbar() {
         {/* Desktop CTA */}
         <div className="hidden lg:block">
           <Link
-            href="/book"
+            href="/services"
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-base font-semibold text-white shadow-sm transition-all duration-300 hover:bg-primary-dark hover:shadow-md"
           >
             Book Now
@@ -342,7 +342,7 @@ export default function Navbar() {
 
           {/* Book Button */}
           <Link
-            href="/book"
+            href="/services"
             onClick={closeMenu}
             className="my-5 flex items-center justify-center rounded-full bg-primary px-6 py-3.5 text-base font-semibold text-white shadow-sm transition-all duration-300 hover:bg-primary-dark hover:shadow-md"
           >

@@ -172,6 +172,26 @@ export function validateBooking({
   return errors;
 }
 
+// Branch → WhatsApp recipient. Keys are the branch slugs used by the booking
+// flow (`/api/branches`: "indiranagar" | "sarjapur-road") and are resolved via
+// normalizeBranch so branch-name variants ("Sarjapura Road", "Indiranagar
+// Branch", …) resolve to the same number. Numbers are stored WITHOUT the 91
+// country-code prefix; openWhatsAppWithMessage adds it for the wa.me URL.
+// NOTE: there is intentionally NO fallback number — an unmapped branch must
+// fail loudly instead of sending the booking to the wrong branch.
+export const branchWhatsAppNumbers = {
+  indiranagar: "9177185103",
+  "sarjapur road": "9740355663",
+};
+
+export function getBranchWhatsAppNumber(branch) {
+  const key = normalizeBranch(
+    typeof branch === "string" ? branch : branch?.name ?? branch?.slug,
+  );
+  if (!key) return null;
+  return branchWhatsAppNumbers[key] ?? null;
+}
+
 export function buildWhatsAppMessage({
   selectedServices,
   studioName,
@@ -209,16 +229,22 @@ export function buildWhatsAppMessage({
   return lines.join("\n");
 }
 
-export function openWhatsAppWithMessage(message) {
-  const whatsappNumber =
-    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210";
+export function openWhatsAppWithMessage(message, whatsappNumber) {
+  // wa.me requires the full international format; stored branch numbers are
+  // 10-digit locals, so prefix the 91 country code when needed.
+  const digits = String(whatsappNumber ?? "").replace(/\D/g, "");
+  const fullNumber = digits.length === 10 ? `91${digits}` : digits;
   window.open(
-    `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`,
+    `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`,
     "_blank",
   );
 }
 
-export function maskedWhatsAppNumber() {
-  const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210";
-  return `+${number.slice(0, 2)} ${number.slice(2, 5)} XXXXX`;
+export function maskedWhatsAppNumber(whatsappNumber) {
+  let digits = String(whatsappNumber ?? "").replace(/\D/g, "");
+  // Mirror openWhatsAppWithMessage: 10-digit stored numbers dial as +91.
+  if (digits.length === 10) digits = `91${digits}`;
+  if (digits.length < 5) return "";
+  const local = digits.length === 12 ? digits.slice(2) : digits;
+  return `+${digits.slice(0, 2)} ${local.slice(0, 3)} XXXXX`;
 }

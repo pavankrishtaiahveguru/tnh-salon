@@ -89,7 +89,7 @@ function BranchCard({ branch }) {
         </a>
 
         <a
-          href="/book"
+          href="/services"
           className="flex flex-1 items-center justify-center rounded-full bg-[#218F87] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#197B74]"
         >
           Book Appointment

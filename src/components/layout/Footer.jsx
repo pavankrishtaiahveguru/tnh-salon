@@ -125,7 +125,7 @@ export default function Footer() {
             </p>
 
             <Link
-              href="/book"
+              href="/services"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#218F87] transition-all duration-300 hover:bg-[#E8F5F3]"
             >
               Book Appointment

@@ -43,9 +43,47 @@ const iconMap = {
   eye: Eye,
 };
 
+// Shared card renderer so mobile/tablet grid and desktop carousel use the
+// exact same card design (border, icon, colors, typography) — single source
+// of truth, no duplicated category data or link logic.
+function CategoryCard({ category, imageSizes }) {
+  const Icon = iconMap[category.icon];
+
+  return (
+    <Link
+      href={`/services/all?category=${category.id}`}
+      data-service-item
+      className="group flex w-full min-w-0 flex-col items-center text-center"
+    >
+      {/* Icon / Image */}
+      <div className="relative flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-[#F1F6F5] transition-transform duration-300 group-hover:scale-105 sm:h-[84px] sm:w-[84px] lg:h-[96px] lg:w-[96px]">
+        {category.image ? (
+          <Image
+            src={category.image}
+            alt={category.name}
+            fill
+            sizes={imageSizes}
+            className="object-cover"
+          />
+        ) : Icon ? (
+          <Icon size={30} strokeWidth={1.5} className="text-[#218F87]" />
+        ) : null}
+      </div>
+
+      {/* Service Name */}
+      <h3 className="mt-3 line-clamp-2 text-[11px] font-semibold leading-4 text-[#173B38] transition-colors duration-300 group-hover:text-[#218F87] sm:text-xs lg:text-[13px]">
+        {category.name}
+      </h3>
+    </Link>
+  );
+}
+
 export default function ServiceCategories() {
   const scrollRef = useRef(null);
 
+  // Desktop-only: scrolls the horizontal carousel. On mobile/tablet the
+  // layout is a CSS grid (no overflow), so this never fires there — the
+  // arrows themselves are hidden below md/lg.
   const scrollServices = (direction) => {
     if (!scrollRef.current) return;
 
@@ -79,8 +117,19 @@ export default function ServiceCategories() {
           </span>
         </div>
 
-        {/* Services Carousel */}
-        <div className="relative">
+        {/* Mobile / Tablet: responsive grid — all categories, no horizontal scrolling */}
+        <div className="grid grid-cols-3 gap-4 sm:grid-cols-5 md:hidden">
+          {serviceCategories.map((category) => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              imageSizes="96px"
+            />
+          ))}
+        </div>
+
+        {/* Desktop: existing horizontal carousel — unchanged */}
+        <div className="relative hidden md:block">
           {/* Left Arrow */}
           <button
             type="button"
@@ -96,42 +145,14 @@ export default function ServiceCategories() {
             ref={scrollRef}
             className="scrollbar-hide flex gap-5 overflow-x-auto scroll-smooth sm:gap-6 lg:gap-7"
           >
-            {serviceCategories.map((category) => {
-              const Icon = iconMap[category.icon];
-
-              return (
-                <Link
-                  key={category.id}
-                  href={`/services/all?category=${category.id}`}
-                  data-service-item
-                  className="group flex w-[72px] shrink-0 flex-col items-center text-center sm:w-[88px] lg:w-[100px]"
-                >
-                  {/* Icon / Image */}
-                  <div className="relative flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-[#F1F6F5] transition-transform duration-300 group-hover:scale-105 sm:h-[84px] sm:w-[84px] lg:h-[96px] lg:w-[96px]">
-                    {category.image ? (
-                      <Image
-                        src={category.image}
-                        alt={category.name}
-                        fill
-                        sizes="96px"
-                        className="object-cover"
-                      />
-                    ) : Icon ? (
-                      <Icon
-                        size={30}
-                        strokeWidth={1.5}
-                        className="text-[#218F87]"
-                      />
-                    ) : null}
-                  </div>
-
-                  {/* Service Name */}
-                  <h3 className="mt-3 line-clamp-2 text-[11px] font-semibold leading-4 text-[#173B38] transition-colors duration-300 group-hover:text-[#218F87] sm:text-xs lg:text-[13px]">
-                    {category.name}
-                  </h3>
-                </Link>
-              );
-            })}
+            {serviceCategories.map((category) => (
+              <div
+                key={category.id}
+                className="w-[72px] shrink-0 sm:w-[88px] lg:w-[100px]"
+              >
+                <CategoryCard category={category} imageSizes="96px" />
+              </div>
+            ))}
           </div>
 
           {/* Right Arrow */}

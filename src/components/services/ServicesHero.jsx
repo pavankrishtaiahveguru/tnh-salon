@@ -11,7 +11,7 @@ export default function ServicesHero({
   const branchNames = branches.map((branch) => branch.name).filter(Boolean);
 
   return (
-    <section className="bg-[#FFFDF9]">
+    <section className="hidden bg-[#FFFDF9] lg:block">
       <div className="mx-auto flex min-h-[58vh] max-w-7xl items-center justify-center px-5 pt-22 text-center sm:px-8 lg:min-h-[62vh] lg:px-10 lg:py-25">
         <div className="w-full max-w-4xl">
           {/* Label */}

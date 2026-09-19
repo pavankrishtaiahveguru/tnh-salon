@@ -27,6 +27,7 @@ import {
   TIME_SLOTS,
   validateBooking,
   buildWhatsAppMessage,
+  getBranchWhatsAppNumber,
   openWhatsAppWithMessage,
   areServicesAvailableAtStudio,
   isServiceAvailableAtStudio,
@@ -81,6 +82,7 @@ export default function BookingModal({
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState("");
   const [whatsAppMessage, setWhatsAppMessage] = useState("");
+  const [whatsAppNumber, setWhatsAppNumber] = useState("");
 
   // Lock background scroll for the entire lifetime of this component,
   // regardless of which internal step is showing.
@@ -238,7 +240,21 @@ export default function BookingModal({
 
     if (Object.keys(validation).length > 0) {
       setErrors(validation);
-      setToast("Please complete the highlighted fields.");
+      setToast(
+        validation.branch
+          ? "Please select a branch before continuing."
+          : "Please complete the highlighted fields.",
+      );
+      return;
+    }
+
+    // The branch the customer currently sees selected in this modal is the
+    // single source of truth for the WhatsApp recipient.
+    const branchWhatsApp = getBranchWhatsAppNumber(selectedStudio);
+    if (!branchWhatsApp) {
+      setToast(
+        "WhatsApp booking is unavailable for this branch. Please try again or contact the salon.",
+      );
       return;
     }
 
@@ -253,13 +269,14 @@ export default function BookingModal({
     });
 
     setWhatsAppMessage(message);
-    openWhatsAppWithMessage(message);
+    setWhatsAppNumber(branchWhatsApp);
+    openWhatsAppWithMessage(message, branchWhatsApp);
     onBookingComplete?.();
     setCurrentStep("confirmation");
   }
 
   function handleOpenWhatsAppAgain() {
-    openWhatsAppWithMessage(whatsAppMessage);
+    openWhatsAppWithMessage(whatsAppMessage, whatsAppNumber);
   }
 
   function handleDone() {
@@ -311,6 +328,7 @@ export default function BookingModal({
             date={date}
             selectedTime={selectedTime}
             message={whatsAppMessage}
+            whatsAppNumber={whatsAppNumber}
             onOpenWhatsAppAgain={handleOpenWhatsAppAgain}
             onDone={handleDone}
             onClose={onClose}
