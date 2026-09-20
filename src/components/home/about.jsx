@@ -45,6 +45,7 @@ export default function About() {
                 alt="The Nail Hue Salon"
                 width={900}
                 height={1100}
+                loading="eager"
                 className="h-[500px] w-full object-cover sm:h-[600px]"
               />
 

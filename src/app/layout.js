@@ -22,6 +22,13 @@ export const metadata = {
   },
   description:
     "The Nail Hue is a premium nail and hair salon offering professional beauty, hair, nail, skin, and self-care services in Bengaluru.",
+
+  icons: {
+    icon: "/logo/logo.jpg",
+    shortcut: "/logo/logo.jpg",
+    apple: "/logo/logo.jpg",
+  },
+
   keywords: [
     // Hair
     "Hair Salon Bangalore",

@@ -351,7 +351,27 @@ function ServicesContent() {
     router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
   };
 
-  const handleSelectCategory = (id) =>
+  // Mobile/tablet: after the category is applied (URL update → fetch effect),
+  // smoothly scroll to the Search/Branch/Sort row. The filter section is
+  // always rendered, so a direct scroll is safe even while the fetch is in
+  // flight. `scroll-mt-24` on the target keeps the fixed navbar (h-20) from
+  // covering the filters. Desktop uses the sidebar and must not scroll.
+  const scrollToServiceFilters = () => {
+    if (typeof window === "undefined") return;
+    document
+      .getElementById("service-filters")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleSelectCategory = (id) => {
+    // Selection must happen BEFORE scrolling.
+    updateParams({ category: id, subCategory: "all" });
+    scrollToServiceFilters();
+  };
+
+  // Desktop sidebar keeps its existing behavior: category changes apply with
+  // no page scrolling.
+  const handleSelectCategoryDesktop = (id) =>
     updateParams({ category: id, subCategory: "all" });
   const handleSelectSubCategory = (name) => updateParams({ subCategory: name });
   const handleSortChange = (value) => updateParams({ sort: value });
@@ -504,7 +524,7 @@ function ServicesContent() {
                       key={category.id}
                       category={category}
                       isSelected={selectedCategory === category.id}
-                      onSelect={handleSelectCategory}
+                      onSelect={handleSelectCategoryDesktop}
                     />
                   ))}
                 </div>
@@ -577,7 +597,10 @@ function ServicesContent() {
             </div>
 
             {/* Search + Sort */}
-            <div className="mb-7 flex flex-col gap-3 lg:flex-row">
+            <div
+              id="service-filters"
+              className="mb-7 flex scroll-mt-24 flex-col gap-3 lg:flex-row"
+            >
               {/* Search */}
               <div className="relative flex-1">
                 <Search

@@ -3,7 +3,7 @@
 // /admin/* renders only the admin layout.
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import WhatsAppButton from "@/components/common/WhatsAppButton";
+import FloatingButtons from "@/components/common/FloatingButtons";
 
 export default function PublicLayout({ children }) {
   return (
@@ -14,7 +14,7 @@ export default function PublicLayout({ children }) {
 
       <Footer />
 
-      <WhatsAppButton />
+      <FloatingButtons />
     </>
   );
 }
