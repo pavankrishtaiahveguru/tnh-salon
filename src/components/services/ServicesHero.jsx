@@ -35,7 +35,7 @@ export default function ServicesHero({
           {/* Description */}
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-6 text-[#49615E] sm:text-base sm:leading-7">
             Hair, nails, skin and grooming across our{" "}
-            {branchNames.join(" and ")} studios.
+            {branchNames.join(" and ")} salons.
           </p>
 
           {/* Stats */}
@@ -60,7 +60,7 @@ export default function ServicesHero({
 
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#78908D] sm:text-xs">
-                Studios
+                Salons
               </p>
               <p className="mt-1 text-2xl font-semibold text-[#09211E] sm:text-3xl">
                 {branches.length}

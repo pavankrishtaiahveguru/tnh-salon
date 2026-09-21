@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import FooterLogo from "./FooterLogo";
 import {
   FaInstagram,
   FaMapMarkerAlt,
@@ -26,16 +26,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div>
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/logo/logo.jpg"
-                alt="The Nail Hue - TNH Salon"
-                width={150}
-                height={60}
-                priority
-                className="h-14 w-auto object-contain"
-              />
-            </Link>
+            <FooterLogo />
 
             <p className="mt-5 max-w-xs text-sm leading-6 text-white/80">
               Your destination for beautiful hair, stunning nails, and radiant
@@ -94,11 +85,11 @@ export default function Footer() {
               </a>
 
               <a
-                href="mailto:info@thenailhue.com"
+                href="mailto:thenailhue@gmail.com"
                 className="flex items-center gap-3 text-sm text-white/80 transition-colors hover:text-white"
               >
                 <FaEnvelope size={16} />
-                <span>info@thenailhue.com</span>
+                <span>thenailhue@gmail.com</span>
               </a>
 
               <div className="flex items-start gap-3 text-sm leading-6 text-white/80">

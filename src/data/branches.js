@@ -1,6 +1,7 @@
 export const branches = {
   indiranagar: {
     name: "Indiranagar",
+    heroImage: "/images/branches/indiranagar-hero.jpeg",
     title: "Best Nail and Hair Salon in Indiranagar",
     subtitle: "Let Us Make You Feel Beautiful Inside and Out.",
     phone: "9177185103",
@@ -19,6 +20,7 @@ export const branches = {
 
   "sarjapur-road": {
     name: "Sarjapur Road",
+    heroImage: "/images/branches/sarjapur-hero.jpg",
     title: "Best Nail and Hair Salon in Sarjapur Road",
     subtitle: "Let Us Make You Feel Beautiful Inside and Out.",
     phone: "9740355663",

@@ -56,19 +56,15 @@ export default function About() {
             <div className="absolute -bottom-5 right-5 flex h-28 w-28 flex-col items-center justify-center rounded-full bg-[#218F87] text-center text-white shadow-[0_12px_30px_rgba(33,143,135,0.25)] sm:right-8">
               <span className="text-3xl font-semibold">TNH</span>
               <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.18em] text-white/80">
-                Beauty Studio
+                Beauty Salon
               </span>
             </div>
           </div>
 
           {/* Content */}
           <div>
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#218F87]">
-              Why The Nail Hue
-            </span>
-
             {/* H1 */}
-            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-[#173B38] sm:text-5xl lg:text-[3.5rem]">
+            <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-tight tracking-tight text-[#173B38] sm:text-5xl lg:text-[3rem]">
               More Than a Salon — Creative Nail & Hair Makeovers with Vegan
               Beauty Care
             </h1>
@@ -82,11 +78,15 @@ export default function About() {
             {/* Body */}
             <div className="mt-6 max-w-2xl space-y-4 text-sm leading-7 text-[#647572] sm:text-base">
               <p>
-                At The Nail Hue, we specialize in creative nail art and expert
-                hair makeovers — two crafts, one studio, one standard of
-                excellence. Every nail design and every haircut or style is
-                treated as a fresh creation, never a copy-paste routine, and
-                finished with vegan, cruelty-free care for your nails and skin.
+                The Nail Hue is Bangalore's go-to salon for hair, nails, and
+                skin, with salons in Indiranagar and Sarjapur Road. For 5+
+                years, our technicians have paired creativity with honest advice
+                — recreating any Pinterest nail art you bring in, using vegan,
+                cruelty-free products for every nail and skin service. Hair is
+                where we push further still, known for solving even the most
+                complex colour corrections alongside cuts, keratin treatments,
+                and bridal styling. Step into our chic, welcoming space and let
+                our experts turn your inspiration into your actual look
               </p>
 
               <p>

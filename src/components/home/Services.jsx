@@ -43,7 +43,7 @@ const services = [
     name: "Waxing & De-Tan",
     category: "Skin",
     description:
-      "Waxing and de-tan for face and body. Single-use spatulas, hygiene protocol shared openly, with appointments available at both studios.",
+      "Waxing and de-tan for face and body. Single-use spatulas, hygiene protocol shared openly, with appointments available at both salons.",
     image: "/images/services/pedi.jpg",
     size: "medium",
   },

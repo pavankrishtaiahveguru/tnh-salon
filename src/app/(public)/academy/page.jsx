@@ -31,14 +31,14 @@ const whatsappMessage = (message) => {
 
 // Hero media carousel — swap these placeholders for the final Cloudinary URLs.
 const academyHeroImages = [
+  "/academy/academy-005.jpg",
   "/academy/academy-001.jpg",
   "/academy/academy-002.jpg",
-  "/academy/academy-003.jpg",
   "/academy/academy-004.jpg",
-  "/academy/academy-005.jpg",
+  "/academy/academy-003.jpg",
 ];
 
-const HERO_SLIDE_INTERVAL_MS = 5000;
+const HERO_SLIDE_INTERVAL_MS = 2500;
 
 const nailLevels = [
   {

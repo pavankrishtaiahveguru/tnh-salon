@@ -1,3 +1,11 @@
+export const metadata = {
+  title: {
+    absolute: "Meet the Founder | The Nail Hue Bangalore",
+  },
+  description:
+    "The story behind The Nail Hue — Bangalore's vegan-friendly nail, hair and skin salon in Indiranagar and Sarjapur Road.",
+};
+
 import Image from "next/image";
 
 export default function FounderPage() {
@@ -115,14 +123,14 @@ export default function FounderPage() {
                 service now runs to a documented protocol. Every client
                 interaction begins with consultation, not assumption. Every
                 result is owed to the system — not to which technician happened
-                to be free that day. Two Bangalore studios operate on that
+                to be free that day. Two Bangalore salons operate on that
                 standard today.
               </p>
 
               <p>
                 Her work now extends beyond the chair. She designs and delivers
                 brand experiences for leading Indian jewellery houses — bringing
-                studio-grade craft into live, high-touch moments for brand
+                salon-grade craft into live, high-touch moments for brand
                 launches and campaigns. It is the same principle applied at a
                 different scale: precision, translated into experience.
               </p>

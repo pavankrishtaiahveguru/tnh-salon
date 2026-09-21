@@ -16,7 +16,7 @@ export default function Hero() {
   useEffect(() => {
     const timer = setInterval(() => {
       setActiveVideo((prev) => (prev + 1) % videos.length);
-    }, 30000);
+    }, 20000);
 
     return () => clearInterval(timer);
   }, []);
@@ -59,27 +59,20 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center px-5 pb-20 pt-32 sm:px-8 lg:px-10">
         <div className="w-full max-w-4xl">
-          {/* Eyebrow */}
-          <div className="mb-5 flex items-center gap-3">
-            <span className="h-px w-10 bg-[#A9D9D5]" />
-
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#A9D9D5] sm:text-sm">
-              The Nail Hue
-            </span>
-          </div>
-
           {/* Heading */}
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-            Where Beauty
+            The Nail Hue -{" "}
             <br />
-            Meets <span className="text-[#A9D9D5]">Creativity.</span>
+            <span className="text-[#A9D9D5] text-4xl lg:text-6xl ">
+              Bangalore's Creative Salon <br/> for Hair, Nails & Skin
+            </span>
           </h1>
 
           {/* Description */}
           <p className="mt-6 max-w-xl text-base leading-7 text-white/80 sm:text-lg">
             Discover a creative salon experience for beautiful hair, stunning
-            nails, and radiant skin. Step in, relax, and let our experts
-            transform your look.
+            nails, and radiant skin — with salons in Indiranagar and Sarjapur
+            Road. Step in, relax, and let our experts transform your look.
           </p>
 
           {/* Buttons */}
@@ -142,38 +135,48 @@ export default function Hero() {
           </div>
 
           {/* Salon Stats */}
-          <div className="mt-7 grid max-w-2xl grid-cols-3 gap-2 sm:gap-3">
-            {/* 100% Hygienic */}
-            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15 sm:min-h-[100px] sm:px-3">
-              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
-                100%
-              </p>
-
-              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
-                Pristine &amp; Hygienic Environment
-              </p>
-            </div>
-
-            {/* 100% Vegan */}
-            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15 sm:min-h-[100px] sm:px-3">
-              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
-                100%
-              </p>
-
-              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
-                Quality and Vegan Products
-              </p>
-            </div>
-
-            {/* 10+ Years */}
+          <div className="mt-7 grid max-w-2xl grid-cols-4 gap-2 sm:gap-3">
+            {/* 5+ Years */}
             <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 sm:min-h-[100px] sm:px-3">
               <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
-                10+
+                5+
               </p>
 
               <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
                 Years Of Experience
               </p>
+            </div>
+
+            {/* 2 branches  */}
+
+            {/* 5+ Years */}
+            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 sm:min-h-[100px] sm:px-3">
+              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                2
+              </p>
+
+              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
+                Branches in Bangalore
+              </p>
+            </div>
+            {/* 100% Hygienic */}
+            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15 sm:min-h-[100px] sm:px-3">
+              <p className="text-2xl font-medium tracking-tight text-white sm:text-3xl">
+                6000+
+              </p>
+
+              <p className="mt-1 text-[9px] leading-3 text-white/75 sm:text-xs sm:leading-4">
+                Customers
+              </p>
+            </div>
+
+            {/* 100% Vegan */}
+            <div className="flex min-h-[90px] flex-col items-center justify-center rounded-xl border border-white/20 bg-white/10 px-2 py-3 text-center backdrop-blur-sm transition-all duration-300 hover:bg-white/15 sm:min-h-[100px] sm:px-3">
+              <p className="text-1.5xl md:text-2xl font-medium tracking-tight text-white">
+                Vegan nail and skin products
+              </p>
+
+              
             </div>
           </div>
         </div>

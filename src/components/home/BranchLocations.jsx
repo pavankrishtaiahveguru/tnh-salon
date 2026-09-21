@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { MapPin, Phone, Mail, Clock, ArrowUpRight } from "lucide-react";
 
 const branches = [
   {
     name: "Indiranagar",
+    slug: "indiranagar",
     address:
       "787, 1st Floor, 1st Cross, 12th Main Rd, HAL 2nd Stage, Indiranagar, Bengaluru, Karnataka 560008",
     phone: "9177185103",
@@ -16,6 +18,7 @@ const branches = [
   },
   {
     name: "Sarjapur Road",
+    slug: "sarjapur",
     address:
       "1, Ground Floor, PNR Pride, No 78, Sarjapur - Marathahalli Rd, Behind Indriya - Aditya Birla Jewellery, Doddakannelli, Bengaluru, Karnataka 560035",
     phone: "9740355663",
@@ -33,11 +36,16 @@ function BranchCard({ branch }) {
       {/* Content */}
       <div className="p-6">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-[#218F87]">
-          TNH Studio
+          TNH Salon
         </p>
 
         <h3 className="text-2xl font-semibold tracking-tight text-[#09211E]">
-          {branch.name}
+          <Link
+            href={`/branches/${branch.slug}`}
+            className="transition-colors duration-200 hover:text-[#218F87]"
+          >
+            {branch.name}
+          </Link>
         </h3>
 
         <div className="mt-5 space-y-3 text-sm text-[#58706D]">
@@ -110,11 +118,11 @@ export default function BranchLocations() {
           </p>
 
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-[#09211E] sm:text-4xl">
-            Our Studio Locations
+            Our Salon Locations
           </h2>
 
           <p className="mt-2 max-w-xl text-sm text-[#687E7B]">
-            Find the TNH studio closest to you.
+            Find the TNH salon closest to you.
           </p>
         </div>
 

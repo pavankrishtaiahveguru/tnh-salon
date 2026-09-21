@@ -16,11 +16,11 @@ export default function StudioSelectionModal({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#09221F]/45 p-3 backdrop-blur-sm sm:p-5">
       <div className="w-full max-w-[520px] overflow-hidden rounded-[18px] border border-[#D7EAE7] bg-white shadow-[0_25px_80px_rgba(0,0,0,0.18)]">
         <div className="flex items-center justify-between border-b border-[#E4EFED] px-4 py-3.5">
-          <h2 className="text-base font-bold text-[#09221F]">Which studio?</h2>
+          <h2 className="text-base font-bold text-[#09221F]">Which salon?</h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close studio selection"
+            aria-label="Close salon selection"
             className="flex h-8 w-8 items-center justify-center rounded-full border border-[#DCEAE8] text-[#718785] hover:bg-[#F1F8F6]"
           >
             <X size={15} />
@@ -55,7 +55,7 @@ export default function StudioSelectionModal({
           </div>
           <p className="mt-4 text-[11px] leading-relaxed text-[#456764]">
             Pick where you&apos;d like to come in. We&apos;ll show you what that
-            studio offers.
+            salon offers.
           </p>
           <div className="mt-4 space-y-2.5">
             {studios.map((studio) =>

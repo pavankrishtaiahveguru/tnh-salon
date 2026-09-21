@@ -266,7 +266,7 @@ const faqSections = [
         question:
           "Which nail salon near Indiranagar does gel extensions and nail art?",
         answer:
-          "Our Indiranagar studio is on 12th Main Road in HAL 2nd Stage, a few minutes from Domlur, Ulsoor, CV Raman Nagar, Jeevan Bhima Nagar and Old Airport Road. We do all five extension systems — soft gel, hard gel, acrylic, poly gel and full cover tips — plus BIAB, Russian manicures and nail art from simple French through to 3D and bridal work. Open 10:30 am to 9:00 pm, seven days.",
+          "Our Indiranagar salon is on 12th Main Road in HAL 2nd Stage, a few minutes from Domlur, Ulsoor, CV Raman Nagar, Jeevan Bhima Nagar and Old Airport Road. We do all five extension systems — soft gel, hard gel, acrylic, poly gel and full cover tips — plus BIAB, Russian manicures and nail art from simple French through to 3D and bridal work. Open 10:30 am to 9:00 pm, seven days.",
       },
       {
         question:

@@ -44,6 +44,20 @@ export default function Navbar() {
     setIsBranchesOpen(false);
   };
 
+  // Clicking the logo on the Home page smooth scrolls to the very top instead
+  // of navigating or pushing another "/" history entry; from any other page
+  // the link navigates to "/" normally.
+  const handleLogoClick = (event) => {
+    closeMenu();
+    if (pathname === "/") {
+      event.preventDefault();
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   // Track hash changes so the in-page "Services" link can be marked active.
   useEffect(() => {
     const updateHash = () => setHash(window.location.hash);
@@ -91,7 +105,8 @@ export default function Navbar() {
         {/* Logo + Brand */}
         <Link
           href="/"
-          onClick={closeMenu}
+          onClick={handleLogoClick}
+          aria-label="The Nail Hue Home"
           className="flex min-w-0 items-center gap-2.5 sm:gap-3"
         >
           <Image

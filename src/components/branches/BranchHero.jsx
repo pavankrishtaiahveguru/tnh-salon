@@ -12,7 +12,7 @@ export default function BranchHero({ branch, image }) {
       {/* Background Image */}
       <div className="absolute inset-0">
         <Image
-          src="/images/branches/branch-hero.jpg"
+          src={branch.heroImage}
           alt={`${branch.name} salon`}
           fill
           priority
@@ -75,7 +75,7 @@ export default function BranchHero({ branch, image }) {
 
           {/* Branch Stats */}
           <div className="mx-auto mt-10 max-w-2xl border-t border-white/20 pt-6">
-            <div className="grid grid-cols-3 text-left">
+            <div className="grid grid-cols-2 text-left">
               {/* Branch */}
               <div className="pr-3 text-center">
                 <p className="text-lg font-semibold text-white sm:text-xl">
@@ -87,16 +87,6 @@ export default function BranchHero({ branch, image }) {
                 </p>
               </div>
 
-              {/* Hours */}
-              <div className="border-l border-white/20 px-3 text-center sm:px-5">
-                <p className="text-lg font-semibold text-white sm:text-xl">
-                  11 AM
-                </p>
-
-                <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.12em] text-white/60 sm:text-[10px]">
-                  Opens Daily
-                </p>
-              </div>
 
               {/* Services */}
               <div className="border-l border-white/20 pl-3 text-center sm:pl-5">
@@ -111,13 +101,6 @@ export default function BranchHero({ branch, image }) {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-7 left-1/2 z-20 hidden -translate-x-1/2 items-center gap-3 text-white/60 lg:flex">
-        <span className="text-[10px] uppercase tracking-[0.25em]">Explore</span>
-
-        <div className="h-10 w-px bg-white/30" />
       </div>
     </section>
   );
