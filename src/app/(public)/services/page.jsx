@@ -23,6 +23,7 @@ import {
   Paintbrush,
   Droplet,
   Eye,
+  UserRound,
   AlertCircle,
 } from "lucide-react";
 
@@ -80,20 +81,21 @@ const SORT_PARAMS = {
 function CategoryTile({ category, isSelected, onSelect }) {
   const Icon = CATEGORY_ICONS[category.id] ?? LayoutGrid;
 
+  // Image + text layout: the image IS the tile — rounded, square, object-cover,
+  // visually dominant. The name sits directly below with no card/border around
+  // the pair. Selected state = subtle teal ring around the image + teal label.
   return (
     <button
       type="button"
       onClick={() => onSelect(category.id)}
       aria-pressed={isSelected}
-      className={`flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-center transition-all ${
-        isSelected
-          ? "border-transparent bg-[#218F87] text-white"
-          : "border-[#DCE8E5] bg-transparent text-[#173B38] hover:bg-[#EEF6F4]"
-      }`}
+      className="flex w-full min-w-0 flex-col items-center gap-1 text-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#218F87]"
     >
       <div
-        className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full ${
-          isSelected ? "bg-white/15" : "bg-[#EEF6F4]"
+        className={`aspect-square w-[calc(80%)] overflow-hidden rounded-xl ring-1 transition-all duration-200 sm:w-[78%] ${
+          isSelected
+            ? "ring-2 ring-[#218F87]"
+            : "ring-[#DCE8E5] hover:ring-[#28B8B0]"
         }`}
       >
         {category.image ? (
@@ -104,16 +106,22 @@ function CategoryTile({ category, isSelected, onSelect }) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <Icon
-            size={17}
-            className={isSelected ? "text-white" : "text-[#218F87]"}
-          />
+          // Icon fallback (e.g. All Services) — same footprint as the image.
+          <span
+            className={`flex h-full w-full items-center justify-center ${
+              isSelected ? "bg-[#E4F4F2]" : "bg-[#EEF6F4]"
+            }`}
+          >
+            <Icon size={20} strokeWidth={1.8} className="text-[#218F87]" />
+          </span>
         )}
       </div>
 
       <span
-        className={`text-[11px] leading-tight ${
-          isSelected ? "font-semibold text-white" : "font-medium text-[#173B38]"
+        className={`w-full text-[11px] leading-tight sm:text-xs ${
+          isSelected
+            ? "font-semibold text-[#218F87]"
+            : "font-medium text-[#173B38]"
         }`}
       >
         {category.name}
@@ -145,6 +153,12 @@ function ServicesContent() {
   const branchParam = searchParams.get("branch") ?? "all";
   const categoryParam = searchParams.get("category");
   const subCategoryParam = searchParams.get("subCategory");
+  // Gender filter — backed by the existing `audience` column values (Women /
+  // Men, exact match server-side). "All" clears the param, so Unisex, Girls
+  // and Boys services remain visible under All. No new data structures.
+  const genderParam = searchParams.get("gender");
+  const selectedGender =
+    genderParam === "Women" || genderParam === "Men" ? genderParam : "all";
 
   const [categories, setCategories] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -277,6 +291,7 @@ function ServicesContent() {
       subCategory:
         selectedSubCategory !== "all" ? selectedSubCategory : undefined,
       branch: selectedBranch === "all" ? "both" : selectedBranch,
+      gender: selectedGender !== "all" ? selectedGender : undefined,
       sort: SORT_PARAMS[sortBy] ?? "menu",
     };
     filtersRef.current = filters;
@@ -324,6 +339,7 @@ function ServicesContent() {
     selectedCategory,
     selectedSubCategory,
     selectedBranch,
+    selectedGender,
     sortBy,
     retryCount,
   ]);
@@ -351,22 +367,41 @@ function ServicesContent() {
     router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
   };
 
-  // Mobile/tablet: after the category is applied (URL update → fetch effect),
-  // smoothly scroll to the Search/Branch/Sort row. The filter section is
-  // always rendered, so a direct scroll is safe even while the fetch is in
-  // flight. `scroll-mt-24` on the target keeps the fixed navbar (h-20) from
-  // covering the filters. Desktop uses the sidebar and must not scroll.
-  const scrollToServiceFilters = () => {
+  // Mobile/tablet: after a category selection commits (URL update → render),
+  // smoothly scroll so the user lands on Selected category → Subcategory
+  // filter → Services — never past the filters and never straight to the
+  // cards. `scroll-mt-24` on the targets keeps the fixed navbar (h-20) from
+  // covering them. Desktop uses the sidebar and never scrolls.
+  const pendingCategoryScrollRef = useRef(false);
+
+  useEffect(() => {
+    if (!pendingCategoryScrollRef.current) return;
+    pendingCategoryScrollRef.current = false;
     if (typeof window === "undefined") return;
-    document
-      .getElementById("service-filters")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+    const target =
+      selectedCategory === "all"
+        ? document.getElementById("mobile-category-grid")
+        : document.getElementById("subcategory-filters");
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedCategory, selectedSubCategory]);
 
   const handleSelectCategory = (id) => {
-    // Selection must happen BEFORE scrolling.
+    if (id === selectedCategory) {
+      // Re-selecting the active category changes nothing in the URL, so the
+      // effect above won't fire — scroll directly instead.
+      if (typeof window !== "undefined") {
+        const target =
+          id === "all"
+            ? document.getElementById("mobile-category-grid")
+            : document.getElementById("subcategory-filters");
+        target?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      return;
+    }
+    // Selection happens first; the scroll runs once the re-render commits
+    // and the subcategory section exists in the DOM.
+    pendingCategoryScrollRef.current = true;
     updateParams({ category: id, subCategory: "all" });
-    scrollToServiceFilters();
   };
 
   // Desktop sidebar keeps its existing behavior: category changes apply with
@@ -374,8 +409,10 @@ function ServicesContent() {
   const handleSelectCategoryDesktop = (id) =>
     updateParams({ category: id, subCategory: "all" });
   const handleSelectSubCategory = (name) => updateParams({ subCategory: name });
-  const handleSortChange = (value) => updateParams({ sort: value });
   const handleBranchChange = (value) => updateParams({ branch: value });
+  // "all" deletes the URL param (All = no audience filter server-side).
+  const handleGenderChange = (value) =>
+    updateParams({ gender: value === "all" ? "" : value });
 
   // Booking flow state (unchanged behavior).
   const [bookingService, setBookingService] = useState(null);
@@ -505,7 +542,7 @@ function ServicesContent() {
       {/* Services Browsing Section */}
       <section
         id="service-categories"
-        className="mx-auto max-w-[1600px] bg-[#FFFDF9] px-5 pb-36 pt-28 sm:px-8 sm:pt-32 lg:px-12 lg:pb-32 lg:pt-12 xl:px-16"
+        className="mx-auto max-w-[1600px] overflow-x-clip bg-[#FFFDF9] px-5 pb-36 pt-28 sm:px-8 sm:pt-32 lg:px-12 lg:pb-32 lg:pt-12 xl:px-16"
       >
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
           {/* Desktop Sidebar */}
@@ -534,8 +571,76 @@ function ServicesContent() {
 
           {/* Services Area */}
           <div className="min-w-0">
+            {/* Mobile / Tablet: Search + Branch/Gender — ALWAYS ABOVE categories.
+                Desktop renders this row further down (lg:hidden here) so the
+                sidebar keeps its existing search/branch layout. */}
+            <div id="service-filters" className="mb-6 scroll-mt-24 lg:hidden">
+              {/* Search — top of the mobile filtering area (Part 6) */}
+              <div className="relative mb-3">
+                <Search
+                  size={19}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C8C89]"
+                />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search services, e.g. balayage, pedicure"
+                  aria-label="Search services"
+                  className="h-12 w-full rounded-xl border border-[#DCE8E5] bg-white pl-11 pr-4 text-sm text-[#173B38] outline-none transition-colors placeholder:text-[#8A9996] focus:border-[#218F87]"
+                />
+              </div>
+
+              {/* Branch + Gender side-by-side, equal widths (Parts 7 + 8) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <MapPin
+                    size={17}
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#647572]"
+                  />
+                  <select
+                    value={selectedBranch}
+                    onChange={(e) => handleBranchChange(e.target.value)}
+                    aria-label="Filter services by branch"
+                    className="h-12 w-full appearance-none rounded-xl border border-[#DCE8E5] bg-white px-3 pl-10 pr-8 text-sm font-medium text-[#173B38] outline-none focus:border-[#218F87]"
+                  >
+                    {branchOptions.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={18}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#647572]"
+                  />
+                </div>
+
+                <div className="relative">
+                  <UserRound
+                    size={17}
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#647572]"
+                  />
+                  <select
+                    value={selectedGender}
+                    onChange={(e) => handleGenderChange(e.target.value)}
+                    aria-label="Filter services by gender"
+                    className="h-12 w-full appearance-none rounded-xl border border-[#DCE8E5] bg-white px-3 pl-10 pr-8 text-sm font-medium text-[#173B38] outline-none focus:border-[#218F87]"
+                  >
+                    <option value="all">Gender · All</option>
+                    <option value="Women">Women</option>
+                    <option value="Men">Men</option>
+                  </select>
+                  <ChevronDown
+                    size={18}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#647572]"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Mobile / Tablet Category Grid — full grid, no horizontal scroll */}
-            <div className="mb-3 lg:hidden">
+            <div id="mobile-category-grid" className="mb-3 scroll-mt-24 lg:hidden">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#647572]">
                 Service Categories
               </p>
@@ -543,66 +648,90 @@ function ServicesContent() {
               {categoriesLoading ? (
                 <CategoryStripSkeleton count={15} />
               ) : (
+                // Image + text tiles: 3 per row on phones, 5 on tablets. Full
+                // width vertical grid — no carousel, no horizontal scrolling.
                 <div className="grid w-full grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4">
-                  {allCategories.map((category) => {
-                    const Icon = CATEGORY_ICONS[category.id] ?? LayoutGrid;
-                    const isSelected = selectedCategory === category.id;
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => handleSelectCategory(category.id)}
-                        className={`flex w-full min-w-0 flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-all ${
-                          isSelected
-                            ? "border-transparent bg-[#218F87] text-white"
-                            : "border-[#DCE8E5] bg-white text-[#173B38] hover:bg-[#EEF6F4]"
-                        }`}
-                      >
-                        <div
-                          className={`flex h-9 w-9 items-center justify-center overflow-hidden rounded-full ${
-                            isSelected ? "bg-white/15" : "bg-[#EEF6F4]"
-                          }`}
-                        >
-                          {category.image ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={category.image}
-                              alt={category.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <Icon
-                              size={14}
-                              className={
-                                isSelected ? "text-white" : "text-[#218F87]"
-                              }
-                            />
-                          )}
-                        </div>
-
-                        <span
-                          className={`text-[10px] leading-tight sm:text-[11px] ${
-                            isSelected
-                              ? "font-semibold text-white"
-                              : "font-medium text-[#173B38]"
-                          }`}
-                        >
-                          {category.name}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {allCategories.map((category) => (
+                    <CategoryTile
+                      key={category.id}
+                      category={category}
+                      isSelected={selectedCategory === category.id}
+                      onSelect={handleSelectCategory}
+                    />
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Search + Sort */}
+            {/* Subcategory chips (mobile/tablet) — rendered right below the
+                category grid, above the result count (Parts 10–13). Desktop
+                keeps them inline above the grid (lg:hidden here). */}
+            {selectedCategory !== "all" && (
+              <div
+                id="subcategory-filters"
+                className="mb-5 scroll-mt-24 lg:hidden"
+              >
+                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#718785]">
+                  <span>Services</span>
+                  <span aria-hidden="true">&gt;</span>
+                  <span className="font-semibold text-[#09221F]">
+                    {selectedCategoryName}
+                  </span>
+                  {selectedSubCategory !== "all" && (
+                    <>
+                      <span aria-hidden="true">&gt;</span>
+                      <span className="font-semibold text-[#218F87]">
+                        {selectedSubCategory}
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                {/* Single row — chips never wrap; the container scrolls
+                    horizontally when the list exceeds the card width. Only
+                    this container scrolls; the page never gains horizontal
+                    overflow (Part 10). Negative margins + matching padding
+                    let chips run edge-to-edge inside the section padding. */}
+                <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectSubCategory("all")}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
+                      selectedSubCategory === "all"
+                        ? "border-[#3DD4C8] bg-[#3DD4C8] font-bold text-[#09221F]"
+                        : "border-[#D7EAE7] bg-white text-[#456764] hover:border-[#3DD4C8]"
+                    }`}
+                  >
+                    All {selectedCategoryName}
+                  </button>
+
+                  {availableSubCategories.map((subCategory) => (
+                    <button
+                      key={subCategory.name}
+                      type="button"
+                      onClick={() => handleSelectSubCategory(subCategory.name)}
+                      className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
+                        selectedSubCategory === subCategory.name
+                          ? "border-[#3DD4C8] bg-[#3DD4C8] font-bold text-[#09221F]"
+                          : "border-[#D7EAE7] bg-white text-[#456764] hover:border-[#3DD4C8]"
+                      }`}
+                    >
+                      {subCategory.name} {subCategory.count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Search + Branch/Gender — one aligned row: search takes
+                the remaining width (flex-1 + min-w-0), branch/gender keep their
+                existing fixed widths. Mobile/tablet use the lg:hidden block. */}
             <div
-              id="service-filters"
-              className="mb-7 flex scroll-mt-24 flex-col gap-3 lg:flex-row"
+              id="service-filters-desktop"
+              className="mb-7 hidden flex-col gap-3 lg:flex lg:flex-row"
             >
               {/* Search */}
-              <div className="relative flex-1">
+              <div className="relative min-w-0 flex-1">
                 <Search
                   size={19}
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C8C89]"
@@ -642,18 +771,21 @@ function ServicesContent() {
                 />
               </div>
 
-              {/* Sort */}
+              {/* Gender (replaces Menu Order — Part 7) */}
               <div className="relative lg:w-48 xl:w-52">
+                <UserRound
+                  size={17}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#647572]"
+                />
                 <select
-                  value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value)}
-                  aria-label="Sort services"
-                  className="h-12 w-full appearance-none rounded-xl border border-[#DCE8E5] bg-white px-4 pr-10 text-sm font-medium text-[#173B38] outline-none focus:border-[#218F87]"
+                  value={selectedGender}
+                  onChange={(e) => handleGenderChange(e.target.value)}
+                  aria-label="Filter services by gender"
+                  className="h-12 w-full appearance-none rounded-xl border border-[#DCE8E5] bg-white px-4 pl-11 pr-10 text-sm font-medium text-[#173B38] outline-none focus:border-[#218F87]"
                 >
-                  <option value="menu">Menu Order</option>
-                  <option value="price-low">Price · Low to High</option>
-                  <option value="price-high">Price · High to Low</option>
-                  <option value="name">Name · A to Z</option>
+                  <option value="all">Gender · All</option>
+                  <option value="Women">Women</option>
+                  <option value="Men">Men</option>
                 </select>
 
                 <ChevronDown
@@ -663,9 +795,10 @@ function ServicesContent() {
               </div>
             </div>
 
+            {/* Subcategory chips (desktop) — inline above the grid, same chips
+                fed by the same server-side facet counts as mobile. */}
             {selectedCategory !== "all" && (
-              <div className="mb-5">
-                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#718785]">
+              <div className="mb-5 hidden lg:block">                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#718785]">
                   <span>Services</span>
                   <span aria-hidden="true">&gt;</span>
                   <span className="font-semibold text-[#09221F]">
@@ -681,11 +814,11 @@ function ServicesContent() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
                   <button
                     type="button"
                     onClick={() => handleSelectSubCategory("all")}
-                    className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
+                    className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
                       selectedSubCategory === "all"
                         ? "border-[#3DD4C8] bg-[#3DD4C8] font-bold text-[#09221F]"
                         : "border-[#D7EAE7] bg-white text-[#456764] hover:border-[#3DD4C8]"
@@ -699,7 +832,7 @@ function ServicesContent() {
                       key={subCategory.name}
                       type="button"
                       onClick={() => handleSelectSubCategory(subCategory.name)}
-                      className={`rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
+                      className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
                         selectedSubCategory === subCategory.name
                           ? "border-[#3DD4C8] bg-[#3DD4C8] font-bold text-[#09221F]"
                           : "border-[#D7EAE7] bg-white text-[#456764] hover:border-[#3DD4C8]"
@@ -761,9 +894,12 @@ function ServicesContent() {
               </div>
             ) : services.length > 0 ? (
               <>
+                {/* 2 cards per row on mobile (Part 1); tablet/desktop keep the
+                    existing responsive columns. min-w-0 grid children cannot
+                    force horizontal overflow. */}
                 <div
                   aria-busy={isFetching}
-                  className={`grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3 transition-opacity duration-200 ${
+                  className={`grid grid-cols-2 gap-x-2.5 gap-y-4 transition-opacity duration-200 md:grid-cols-2 md:gap-5 xl:grid-cols-3 ${
                     isFetching ? "opacity-50" : "opacity-100"
                   }`}
                 >

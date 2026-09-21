@@ -84,8 +84,15 @@ export async function getServicesPage(filters = {}, { signal } = {}) {
       );
 
       const rows = payload?.data?.services ?? payload?.services ?? [];
+      // Sub-category facet counts (names + live counts for the currently
+      // selected category) — the backend computes them server-side whenever
+      // a category filter is present; surfaced for the sub-category chips.
+      const subCategories = Array.isArray(payload?.subCategories)
+        ? payload.subCategories
+        : null;
       const value = {
         services: Array.isArray(rows) ? rows.map(mapServiceRow) : [],
+        subCategories,
         pagination: payload?.pagination ?? null,
       };
 

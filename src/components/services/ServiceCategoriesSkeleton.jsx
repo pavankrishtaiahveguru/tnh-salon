@@ -11,31 +11,18 @@
 
 const PULSE_BG = "bg-[#E8F6F4]"; // same tint used by ServicesGridSkeleton
 
-// Sidebar variant — matches CategoryTile's grid tile: rounded-2xl card,
-// 40px circular image, 11px name line.
+// Shared tile variant — matches CategoryTile's image + text design: square
+// rounded image area on top, name line below, NO surrounding bordered card.
 function CategoryTileSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E5] bg-white px-2 py-3"
+      className="flex w-full min-w-0 flex-col items-center gap-1"
     >
-      <div className={`h-10 w-10 animate-pulse rounded-full ${PULSE_BG}`} />
-      <div className={`h-2.5 w-14 animate-pulse rounded ${PULSE_BG}`} />
-    </div>
-  );
-}
-
-// Mobile/tablet variant — matches the responsive grid tile: full-width
-// card, 36px circular image, 10px name line. Grid cell handles sizing, so no
-// fixed width / shrink-0 is needed.
-function CategoryChipSkeleton() {
-  return (
-    <div
-      aria-hidden="true"
-      className="flex w-full min-w-0 flex-col items-center gap-1.5 rounded-xl border border-[#DCE8E5] bg-white px-2 py-2.5"
-    >
-      <div className={`h-9 w-9 shrink-0 animate-pulse rounded-full ${PULSE_BG}`}></div>
-      <div className={`h-2 w-12 max-w-full animate-pulse rounded ${PULSE_BG}`}></div>
+      <div
+        className={`aspect-square w-[calc(100%-5px)] animate-pulse rounded-xl sm:w-[80%] ${PULSE_BG}`}
+      />
+      <div className={`h-2.5 w-14 max-w-full animate-pulse rounded ${PULSE_BG}`} />
     </div>
   );
 }
@@ -65,7 +52,7 @@ export function CategoryStripSkeleton({ count = 6 }) {
       className="grid w-full grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4"
     >
       {Array.from({ length: count }).map((_, index) => (
-        <CategoryChipSkeleton key={index} />
+        <CategoryTileSkeleton key={index} />
       ))}
     </div>
   );

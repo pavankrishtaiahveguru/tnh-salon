@@ -140,16 +140,26 @@ export default function ServiceCategorySelector({
       <div className="flex shrink-0 items-center gap-3 border-b border-[#E4EFED] px-4 py-3.5">
         <button
           type="button"
-          onClick={categoryId ? () => handleCategoryChange(null) : onBack}
+          onClick={
+            // Back walks up one level: Services → Subcategory list → Category
+            // list → booking. Category/subcategory data stays untouched.
+            categoryId && subCategory !== "all"
+              ? () => setSubCategory("all")
+              : categoryId
+                ? () => handleCategoryChange(null)
+                : onBack
+          }
           aria-label="Back"
           className="flex h-8 w-8 items-center justify-center rounded-full border border-[#DCEAE8] text-[#718785] hover:bg-[#F1F8F6]"
         >
           <ArrowLeft size={15} />
         </button>
         <h2 className="min-w-0 flex-1 truncate text-sm font-bold text-[#09221F]">
-          {categoryId
-            ? `← ${selectedCategoryName}`
-            : `Add a service · ${selectedCount} selected`}
+          {!categoryId
+            ? `Add a service · ${selectedCount} selected`
+            : subCategory === "all"
+              ? `Select subcategory · ${selectedCategoryName}`
+              : `${selectedCategoryName} · ${subCategory}`}
         </h2>
         <button
           type="button"
@@ -161,7 +171,7 @@ export default function ServiceCategorySelector({
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 [scrollbar-width:thin]">
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain p-4 [scrollbar-width:thin]">
         {selectedStudioData && (
           <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#BFE3DE] bg-[#F1FAF8] px-3 py-2.5 text-xs text-[#285F5A]">
             <Check size={15} className="mt-0.5 shrink-0 text-[#218F87]" />
@@ -225,6 +235,13 @@ export default function ServiceCategorySelector({
                 className="w-full rounded-lg border border-[#DCEAE8] py-2.5 pl-9 pr-3 text-xs text-[#09221F] outline-none focus:border-[#28B8B0]"
               />
             </div>
+            {/* Subcategory step (Parts 18–20): the chips carry live counts
+                computed from the same mapped catalogue the Services page uses
+                (service.subCategory ← subcategory_name), so both flows stay
+                consistent with the backend data. Wraps — never overflows. */}
+            <p className="mb-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#718785]">
+              Subcategory
+            </p>
             <div className="mb-3 flex flex-wrap gap-2">
               <button
                 type="button"

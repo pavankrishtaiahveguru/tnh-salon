@@ -106,11 +106,7 @@ function ServiceCard({ service, onBook }) {
 
             {/* Name */}
             <div className="min-w-0 pt-0.5">
-              {service.gender && (
-                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#718785]">
-                  {service.gender}
-                </p>
-              )}
+              
 
               <h2 className="mt-1 text-xs font-bold leading-tight text-[#09221F] sm:text-[15px]">
                 {service.name}
@@ -118,15 +114,18 @@ function ServiceCard({ service, onBook }) {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description — capped at 2 lines on every breakpoint (Part 3);
+              the full text stays available in View Details and the booking
+              flow. Only the display is clamped — stored data is untouched. */}
           {service.description && (
-            <p className="mt-2 line-clamp-2 text-[10px] leading-[1.45] text-[#718785] sm:mt-3 sm:line-clamp-3 sm:text-xs">
+            <p className="mt-2 line-clamp-2 text-[10px] leading-[1.45] text-[#718785] sm:mt-3 sm:text-xs">
               {service.description}
             </p>
           )}
 
-          {/* Meta */}
-          <div className="mt-2 flex flex-wrap gap-1 sm:mt-3 sm:gap-1.5">
+          {/* Meta — compact on mobile; gender chip is desktop-only since the
+              gender is already shown in the eyebrow line above */}
+          <div className="mt-2 hidden flex-wrap gap-1 sm:mt-3 sm:flex sm:gap-1.5">
             {service.gender && (
               <span className="flex items-center gap-1 rounded-lg bg-[#EAF5F3] px-2.5 py-1.5 text-[10px] font-medium text-[#285F5A]">
                 <UserRound size={10} />
@@ -162,15 +161,22 @@ function ServiceCard({ service, onBook }) {
             )}
           </div>
 
-          {/* Variants */}
+          {/* Variants — EVERY variant returned by the backend is rendered
+              (Parts 4 + 31): S/M/L shows all three, S/M shows two, one shows
+              one. auto-cols-fr + grid-flow-col gives each variant an equal
+              fraction of the card width so all variants ALWAYS sit in a
+              single row — even 3-up inside the narrow 2-per-row mobile cards
+              (a 375px viewport leaves ~139px per card; each box gets ~43px).
+              Nothing is hidden, wrapped, or scrollable; prices/labels just
+              truncate instead of ever forcing a second row. */}
           {hasVariants && (
-            <div className="mt-2 flex gap-1.5 overflow-hidden sm:mt-3 sm:gap-2">
-              {variants.slice(0, 2).map((variant, index) => (
+            <div className="mt-2 grid auto-cols-fr grid-flow-col gap-1.5 sm:mt-3 sm:gap-2">
+              {variants.map((variant, index) => (
                 <div
-                  key={`${variant.label}-${index}`}
-                  className="min-w-0 flex-1 rounded-lg border border-[#E0EEEC] px-1.5 py-1.5 sm:min-w-[78px] sm:px-2.5 sm:py-2"
+                  key={variant.id ?? `${variant.label}-${index}`}
+                  className="min-w-0 rounded-lg border border-[#E0EEEC] px-1.5 py-1.5 sm:px-2.5 sm:py-2"
                 >
-                  <p className="text-xs font-bold leading-none text-[#09221F] sm:text-sm">
+                  <p className="truncate text-xs font-bold leading-none text-[#09221F] sm:text-sm">
                     ₹{variant.price}
                   </p>
 

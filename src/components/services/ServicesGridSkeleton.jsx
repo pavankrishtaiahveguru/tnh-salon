@@ -6,7 +6,7 @@
 // Mirrors ServiceCard's exact box structure (image tile, gender label, name
 // lines, description lines, meta chips, divider, price block, variant chips,
 // button row) so the grid does not shift when real cards arrive. Responsive:
-// 3 columns desktop / 2 tablet / 1–2 mobile, matching the real grid classes.
+// 3 columns desktop / 2 tablet / 2 mobile — matching the real grid classes.
 // Purely decorative — hidden from assistive tech; the container carries
 // aria-busy and an aria-live region instead.
 
@@ -54,7 +54,7 @@ export default function ServicesGridSkeleton({ count = 6 }) {
       aria-busy="true"
       aria-live="polite"
       aria-label="Loading services"
-      className="grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3"
+      className="grid grid-cols-2 gap-x-2.5 gap-y-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3"
     >
       {Array.from({ length: count }).map((_, index) => (
         <ServiceCardSkeleton key={index} />
