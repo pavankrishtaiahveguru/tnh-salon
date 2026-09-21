@@ -9,7 +9,8 @@ import BookingModal from "./BookingModal";
 // responsive sizes prevent the browser from downloading oversized originals
 // (Phase 16). Detail-modal imagery reuses the same underlying file with a
 // larger slot, so it keeps fill + a bigger sizes value.
-const CARD_IMAGE_SIZES = "(max-width: 640px) 48px, (max-width: 768px) 64px, 64px";
+const CARD_IMAGE_SIZES =
+  "(max-width: 640px) 48px, (max-width: 768px) 64px, 64px";
 const MODAL_IMAGE_SIZES = "152px";
 
 function ServiceCard({ service, onBook }) {
@@ -106,8 +107,6 @@ function ServiceCard({ service, onBook }) {
 
             {/* Name */}
             <div className="min-w-0 pt-0.5">
-              
-
               <h2 className="mt-1 text-xs font-bold leading-tight text-[#09221F] sm:text-[15px]">
                 {service.name}
               </h2>
@@ -123,20 +122,19 @@ function ServiceCard({ service, onBook }) {
             </p>
           )}
 
-          {/* Meta — compact on mobile; gender chip is desktop-only since the
-              gender is already shown in the eyebrow line above */}
-          <div className="mt-2 hidden flex-wrap gap-1 sm:mt-3 sm:flex sm:gap-1.5">
+          {/* Meta — compact on mobile so both values stay above the price. */}
+          <div className="mt-2 flex min-w-0 flex-nowrap gap-1 overflow-hidden sm:mt-3 sm:gap-1.5">
             {service.gender && (
-              <span className="flex items-center gap-1 rounded-lg bg-[#EAF5F3] px-2.5 py-1.5 text-[10px] font-medium text-[#285F5A]">
-                <UserRound size={10} />
-                {service.gender}
+              <span className="flex min-w-0 shrink items-center gap-0.5 rounded-lg bg-[#EAF5F3] px-1.5 py-1 text-[9px] font-medium text-[#285F5A] sm:gap-1 sm:px-2.5 sm:py-1.5 sm:text-[10px]">
+                <UserRound size={10} className="h-2.5 w-2.5 shrink-0" />
+                <span className="truncate">{service.gender}</span>
               </span>
             )}
 
             {service.duration && (
-              <span className="flex items-center gap-1 rounded-lg bg-[#EAF5F3] px-2.5 py-1.5 text-[10px] font-medium text-[#456764]">
-                <Clock size={10} />
-                {service.duration}
+              <span className="flex min-w-0 shrink items-center gap-0.5 rounded-lg bg-[#EAF5F3] px-1.5 py-1 text-[9px] font-medium text-[#456764] sm:gap-1 sm:px-2.5 sm:py-1.5 sm:text-[10px]">
+                <Clock size={10} className="h-2.5 w-2.5 shrink-0" />
+                <span className="truncate">{service.duration}</span>
               </span>
             )}
           </div>
@@ -176,7 +174,7 @@ function ServiceCard({ service, onBook }) {
                   key={variant.id ?? `${variant.label}-${index}`}
                   className="min-w-0 rounded-lg border border-[#E0EEEC] px-1.5 py-1.5 sm:px-2.5 sm:py-2"
                 >
-                  <p className="truncate text-xs font-bold leading-none text-[#09221F] sm:text-sm">
+                  <p className="truncate text-[8px] font-bold leading-none text-[#09221F] sm:text-sm">
                     ₹{variant.price}
                   </p>
 
@@ -200,7 +198,7 @@ function ServiceCard({ service, onBook }) {
             </button>
 
             {/* BOOK */}
-            <button 
+            <button
               type="button"
               onClick={handleBookClick}
               className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#218F87] px-1.5 py-1.5 text-[9px] font-bold text-white transition-colors hover:bg-[#093c36] sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[11px]"
