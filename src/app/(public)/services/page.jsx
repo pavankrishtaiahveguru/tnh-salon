@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 import ServicesHero from "@/components/services/ServicesHero";
+import ServicesBreadcrumb from "@/components/services/ServicesBreadcrumb";
 import ServiceCard from "@/components/services/ServiceCard";
 import ServicesGridSkeleton from "@/components/services/ServicesGridSkeleton";
 import {
@@ -400,10 +401,29 @@ function ServicesContent() {
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [selectedCategory, selectedSubCategory]);
 
+  // Keep the horizontally-scrolling subcategory chip rows in a sensible
+  // position whenever the active category/subcategory changes — e.g. after
+  // navigating back from a subcategory the row starts at "All {Category}"
+  // again instead of wherever a long chip list happened to be scrolled.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    document
+      .querySelectorAll(".tnh-subcategory-scroll")
+      .forEach((el) => el.scrollTo({ left: 0, behavior: "smooth" }));
+  }, [selectedCategory, selectedSubCategory]);
+
   const handleSelectCategory = (id) => {
     if (id === selectedCategory) {
-      // Re-selecting the active category changes nothing in the URL, so the
-      // effect above won't fire — scroll directly instead.
+      // Re-selecting the active category walks BACK one level: an active
+      // subcategory is removed while the category stays selected (the parent
+      // click must drop only its child filter). Once already at the category
+      // level, nothing changes in the URL, so the effect above won't fire —
+      // scroll directly instead.
+      if (selectedSubCategory !== "all") {
+        pendingCategoryScrollRef.current = true;
+        updateParams({ subCategory: "all" });
+        return;
+      }
       if (typeof window !== "undefined") {
         const target =
           id === "all"
@@ -424,6 +444,16 @@ function ServicesContent() {
   const handleSelectCategoryDesktop = (id) =>
     updateParams({ category: id, subCategory: "all" });
   const handleSelectSubCategory = (name) => updateParams({ subCategory: name });
+
+  // Breadcrumb navigation — a parent click removes ONLY its child filter:
+  // "Services" clears category + subCategory; "{Category}" drops just the
+  // subcategory and stays inside the category. Other filters (search, branch,
+  // gender) are never touched, and pagination restarts at page 1 because the
+  // fetch effect always requests page 1.
+  const handleBreadcrumbSelectServices = () =>
+    updateParams({ category: "all", subCategory: "all" });
+  const handleBreadcrumbSelectCategory = () =>
+    updateParams({ subCategory: "all" });
   const handleBranchChange = (value) => updateParams({ branch: value });
   // "all" deletes the URL param (All = no audience filter server-side).
   const handleGenderChange = (value) =>
@@ -586,26 +616,39 @@ function ServicesContent() {
 
           {/* Services Area */}
           <div className="min-w-0">
-            {/* Mobile / Tablet: Search + Branch/Gender — ALWAYS ABOVE categories.
+            {/* Mobile / Tablet: STICKY SEARCH — the SAME controlled input as
+                before (one search state, no duplicate component). It lives as
+                a direct child of this tall column so position:sticky can
+                follow the whole page scroll (a sticky element only sticks
+                within its parent, and the previous #service-filters wrapper
+                was too short). It sits just below the fixed navbar (h-20 =
+                80px), gets the page background + a subtle bottom border so
+                content never shows through, and unmounts ENTIRELY while the
+                booking modal is open so it can never appear above/behind/
+                through it. Desktop (lg+) keeps the existing inline row below. */}
+            {!isBookingOpen && (
+              <div className="sticky top-20 z-40 -mx-5 mb-4 border-b border-[#E5EFED] bg-[#FFFDF9]/95 px-5 pb-3 pt-2 backdrop-blur-sm sm:-mx-8 sm:px-8 lg:hidden">
+                <div className="relative">
+                  <Search
+                    size={19}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C8C89]"
+                  />
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search services, e.g. balayage, pedicure"
+                    aria-label="Search services"
+                    className="h-12 w-full rounded-xl border border-[#DCE8E5] bg-white pl-11 pr-4 text-sm text-[#173B38] outline-none transition-colors placeholder:text-[#8A9996] focus:border-[#218F87]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Mobile / Tablet: Branch/Gender — ALWAYS ABOVE categories.
                 Desktop renders this row further down (lg:hidden here) so the
                 sidebar keeps its existing search/branch layout. */}
             <div id="service-filters" className="mb-6 scroll-mt-24 lg:hidden">
-              {/* Search — top of the mobile filtering area (Part 6) */}
-              <div className="relative mb-3">
-                <Search
-                  size={19}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7C8C89]"
-                />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search services, e.g. balayage, pedicure"
-                  aria-label="Search services"
-                  className="h-12 w-full rounded-xl border border-[#DCE8E5] bg-white pl-11 pr-4 text-sm text-[#173B38] outline-none transition-colors placeholder:text-[#8A9996] focus:border-[#218F87]"
-                />
-              </div>
-
               {/* Branch + Gender side-by-side, equal widths (Parts 7 + 8) */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
@@ -655,7 +698,7 @@ function ServicesContent() {
             </div>
 
             {/* Mobile / Tablet Category Grid — full grid, no horizontal scroll */}
-            <div id="mobile-category-grid" className="mb-3 scroll-mt-24 lg:hidden">
+            <div id="mobile-category-grid" className="mb-3 scroll-mt-36 lg:hidden">
               <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#647572]">
                 Service Categories
               </p>
@@ -684,22 +727,17 @@ function ServicesContent() {
             {selectedCategory !== "all" && (
               <div
                 id="subcategory-filters"
-                className="mb-5 scroll-mt-24 lg:hidden"
+                className="mb-5 scroll-mt-36 lg:hidden"
               >
-                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#718785]">
-                  <span>Services</span>
-                  <span aria-hidden="true">&gt;</span>
-                  <span className="font-semibold text-[#09221F]">
-                    {selectedCategoryName}
-                  </span>
-                  {selectedSubCategory !== "all" && (
-                    <>
-                      <span aria-hidden="true">&gt;</span>
-                      <span className="font-semibold text-[#218F87]">
-                        {selectedSubCategory}
-                      </span>
-                    </>
-                  )}
+                <div className="mb-3">
+                  <ServicesBreadcrumb
+                    categoryName={selectedCategoryName ?? selectedCategory}
+                    subCategoryName={
+                      selectedSubCategory !== "all" ? selectedSubCategory : null
+                    }
+                    onSelectRoot={handleBreadcrumbSelectServices}
+                    onSelectCategory={handleBreadcrumbSelectCategory}
+                  />
                 </div>
 
                 {/* Single row — chips never wrap; the container scrolls
@@ -813,20 +851,16 @@ function ServicesContent() {
             {/* Subcategory chips (desktop) — inline above the grid, same chips
                 fed by the same server-side facet counts as mobile. */}
             {selectedCategory !== "all" && (
-              <div className="mb-5 hidden lg:block">                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#718785]">
-                  <span>Services</span>
-                  <span aria-hidden="true">&gt;</span>
-                  <span className="font-semibold text-[#09221F]">
-                    {selectedCategoryName}
-                  </span>
-                  {selectedSubCategory !== "all" && (
-                    <>
-                      <span aria-hidden="true">&gt;</span>
-                      <span className="font-semibold text-[#218F87]">
-                        {selectedSubCategory}
-                      </span>
-                    </>
-                  )}
+              <div className="mb-5 hidden lg:block">
+                <div className="mb-3">
+                  <ServicesBreadcrumb
+                    categoryName={selectedCategoryName ?? selectedCategory}
+                    subCategoryName={
+                      selectedSubCategory !== "all" ? selectedSubCategory : null
+                    }
+                    onSelectRoot={handleBreadcrumbSelectServices}
+                    onSelectCategory={handleBreadcrumbSelectCategory}
+                  />
                 </div>
 
                 <div className="tnh-subcategory-scroll -mx-4 flex gap-2 px-4 pb-3">
@@ -967,7 +1001,9 @@ function ServicesContent() {
 
                 <button
                   type="button"
-                  onClick={() => updateParams({ q: "", category: "all" })}
+                  onClick={() =>
+                    updateParams({ q: "", category: "all", subCategory: "all" })
+                  }
                   className="mt-5 rounded-full bg-[#218F87] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#197B74]"
                 >
                   View All Services
