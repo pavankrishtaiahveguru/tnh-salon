@@ -23,7 +23,7 @@ export default function ServiceFilters({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search services, e.g. gel, balayage, pedicure"
-          className="h-14 w-full rounded-xl border border-[#D8E9E6] bg-white pl-12 pr-5 text-sm text-[#173B38] outline-none transition-all placeholder:text-[#7B8D89] focus:border-[#218F87] focus:ring-2 focus:ring-[#218F87]/10 sm:text-base"
+          className="h-14 w-full rounded-xl border border-[#D8E9E6] bg-[#218F87] pl-12 pr-5 text-sm text-[#173B38] outline-none transition-all placeholder:text-[#7B8D89] focus:border-[#173B38] focus:ring-2 focus:ring-[#173B38]/10 sm:text-base"
         />
       </div>
 

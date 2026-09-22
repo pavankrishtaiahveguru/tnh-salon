@@ -639,7 +639,7 @@ function ServicesContent() {
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Search services, e.g. balayage, pedicure"
                     aria-label="Search services"
-                    className="h-12 w-full rounded-xl border border-[#DCE8E5] bg-white pl-11 pr-4 text-sm text-[#173B38] outline-none transition-colors placeholder:text-[#8A9996] focus:border-[#218F87]"
+                    className="h-12 w-full rounded-xl border border-[#218F87] bg-white pl-11 pr-4 text-sm text-[#173B38] outline-none transition-colors placeholder:text-[#8A9996] focus:border-[#173B38]"
                   />
                 </div>
               </div>
