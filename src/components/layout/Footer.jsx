@@ -70,20 +70,42 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
+          {/* Contact */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.18em]">
               Get In Touch
             </h3>
 
             <div className="mt-5 space-y-4">
+              {/* Indiranagar */}
               <a
-                href="tel:+919740355663"
-                className="flex items-center gap-3 text-sm text-white/80 transition-colors hover:text-white"
+                href="tel:+919177185103"
+                className="flex items-start gap-3 text-sm text-white/80 transition-colors hover:text-white"
               >
-                <FaPhoneAlt size={15} />
-                <span>+91 97403 55663</span>
+                <FaPhoneAlt size={15} className="mt-1 shrink-0" />
+                <span>
+                  <span className="block font-medium text-white">
+                    Indiranagar
+                  </span>
+                  <span>+91 91771 85103</span>
+                </span>
               </a>
 
+              {/* Sarjapur Road */}
+              <a
+                href="tel:+919740355663"
+                className="flex items-start gap-3 text-sm text-white/80 transition-colors hover:text-white"
+              >
+                <FaPhoneAlt size={15} className="mt-1 shrink-0" />
+                <span>
+                  <span className="block font-medium text-white">
+                    Sarjapur Road
+                  </span>
+                  <span>+91 97403 55663</span>
+                </span>
+              </a>
+
+              {/* Email */}
               <a
                 href="mailto:thenailhue@gmail.com"
                 className="flex items-center gap-3 text-sm text-white/80 transition-colors hover:text-white"
@@ -92,6 +114,7 @@ export default function Footer() {
                 <span>thenailhue@gmail.com</span>
               </a>
 
+              {/* Location */}
               <div className="flex items-start gap-3 text-sm leading-6 text-white/80">
                 <FaMapMarkerAlt size={16} className="mt-1 shrink-0" />
 
