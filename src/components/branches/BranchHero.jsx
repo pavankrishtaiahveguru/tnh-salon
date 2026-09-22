@@ -72,34 +72,6 @@ export default function BranchHero({ branch, image }) {
               Call Now
             </a>
           </div>
-
-          {/* Branch Stats */}
-          <div className="mx-auto mt-10 max-w-2xl border-t border-white/20 pt-6">
-            <div className="grid grid-cols-2 text-left">
-              {/* Branch */}
-              <div className="pr-3 text-center">
-                <p className="text-lg font-semibold text-white sm:text-xl">
-                  {branch.name}
-                </p>
-
-                <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.12em] text-white/60 sm:text-[10px]">
-                  Location
-                </p>
-              </div>
-
-
-              {/* Services */}
-              <div className="border-l border-white/20 pl-3 text-center sm:pl-5">
-                <p className="text-lg font-semibold text-white sm:text-xl">
-                  Beauty
-                </p>
-
-                <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.12em] text-white/60 sm:text-[10px]">
-                  Hair · Nails · Skin
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>

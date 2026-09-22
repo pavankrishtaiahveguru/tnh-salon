@@ -145,6 +145,45 @@ export async function getAllActiveServices({ signal } = {}) {
   return promise;
 }
 
+// Total number of ACTIVE services in the catalog — UNFILTERED. Powers the
+// Services page hero stat, which must stay constant no matter which
+// category/subcategory/branch/gender/search filters are applied. Backed by a
+// dedicated COUNT endpoint (GET /api/services/count), so no service rows are
+// transferred just to count them. Cached + de-duplicated like the other
+// fetchers here; a failed fetch is never cached, so the next call retries.
+const TOTAL_COUNT_KEY = "services?count";
+
+export async function getTotalServiceCount({ signal } = {}) {
+  const cached = cache.get(TOTAL_COUNT_KEY);
+  if (cached && cached.expiresAt > Date.now()) {
+    return Promise.resolve(cached.value);
+  }
+  if (cached) cache.delete(TOTAL_COUNT_KEY);
+
+  const pending = inFlight.get(TOTAL_COUNT_KEY);
+  if (pending) return pending;
+
+  const promise = (async () => {
+    try {
+      const payload = await api.get("/api/services/count", { signal });
+      const value = Number(payload?.count ?? 0);
+      if (!signal?.aborted) {
+        cache.set(TOTAL_COUNT_KEY, {
+          expiresAt: Date.now() + CACHE_TTL_MS,
+          value,
+        });
+        evictIfNeeded();
+      }
+      return value;
+    } finally {
+      inFlight.delete(TOTAL_COUNT_KEY);
+    }
+  })();
+
+  inFlight.set(TOTAL_COUNT_KEY, promise);
+  return promise;
+}
+
 // Phase 12 — prefetch the first Services page. Fire-and-forget: failures are
 // ignored (the Services page fetches normally on arrival). Call from the home
 // page / navbar once navigation to /services becomes likely. Defaults keep

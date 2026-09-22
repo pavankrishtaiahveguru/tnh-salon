@@ -1,8 +1,12 @@
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
+import AiChatWidget from "./AiChatWidget";
 
 export default function FloatingButtons() {
   return (
     <>
+      {/* AI chat assistant */}
+      <AiChatWidget />
+
       {/* Instagram */}
       <a
         href="https://www.instagram.com/thenailhue?igsh=aDR0bmltaGhrNWt0"

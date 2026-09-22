@@ -62,6 +62,35 @@ input[type="reset"] {
   display: none;
 }
 
+/* Services page: subcategory filter row. Always-visible horizontal
+   scrollbar so users on mobile/tablet/desktop can tell there are more
+   chips to scroll to, instead of relying on the OS's auto-hidden
+   scrollbar (e.g. macOS/iOS default to hiding it until you scroll). */
+.tnh-subcategory-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: auto;
+  scrollbar-color: var(--primary-dark) var(--primary-soft);
+}
+
+.tnh-subcategory-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tnh-subcategory-scroll::-webkit-scrollbar-track {
+  background: var(--primary-soft);
+  border-radius: 9999px;
+}
+
+.tnh-subcategory-scroll::-webkit-scrollbar-thumb {
+  background: var(--primary-dark);
+  border-radius: 9999px;
+}
+
+.tnh-subcategory-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
 /* Subtle entrance animation (used by the Gallery Instagram CTA) */
 @keyframes fade-up {
   from {

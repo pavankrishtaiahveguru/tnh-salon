@@ -10,6 +10,10 @@ export default function ServicesHero({
 }) {
   const branchNames = branches.map((branch) => branch.name).filter(Boolean);
 
+  // The count arrives from a dedicated unfiltered COUNT endpoint; while it's
+  // in flight a same-height placeholder keeps the layout stable.
+  const serviceCountLabel = serviceCount ?? "—";
+
   return (
     <section className="hidden bg-[#FFFDF9] lg:block">
       <div className="mx-auto flex min-h-[58vh] max-w-7xl items-center justify-center px-5 pt-22 text-center sm:px-8 lg:min-h-[62vh] lg:px-10 lg:py-25">
@@ -45,7 +49,7 @@ export default function ServicesHero({
                 Services
               </p>
               <p className="mt-1 text-2xl font-semibold text-[#09211E] sm:text-3xl">
-                {serviceCount}
+                {serviceCountLabel}
               </p>
             </div>
 

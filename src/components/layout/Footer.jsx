@@ -130,7 +130,8 @@ export default function Footer() {
       <div className="border-t border-white/15">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-5 text-center sm:px-8 md:flex-row md:items-center md:justify-between md:text-left lg:px-10">
           <p className="text-xs text-white/70">
-            © {new Date().getFullYear()} The Nail Hue. All rights reserved.
+            Copyright © {new Date().getFullYear()} The Nail Hue - TNH Salon |
+            Powered by The Nail Hue - TNH Salon
           </p>
 
           <DevelopedByStaffArc />

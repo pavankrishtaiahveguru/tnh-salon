@@ -41,6 +41,7 @@ import {
   getCategoriesCached,
   getBranchesCached,
   getAllActiveServices,
+  getTotalServiceCount,
   clearServicesCache,
   SERVICES_PAGE_SIZE,
 } from "@/lib/services";
@@ -154,8 +155,9 @@ function ServicesContent() {
   const categoryParam = searchParams.get("category");
   const subCategoryParam = searchParams.get("subCategory");
   // Gender filter — backed by the existing `audience` column values (Women /
-  // Men, exact match server-side). "All" clears the param, so Unisex, Girls
-  // and Boys services remain visible under All. No new data structures.
+  // Men). Server-side, Women/Men also include Unisex services (Unisex is
+  // bookable by either audience). "All" clears the param, so every audience
+  // remains visible under All. No new data structures.
   const genderParam = searchParams.get("gender");
   const selectedGender =
     genderParam === "Women" || genderParam === "Men" ? genderParam : "all";
@@ -169,6 +171,10 @@ function ServicesContent() {
   const [servicesError, setServicesError] = useState("");
   const [isFetching, setIsFetching] = useState(true);
   const [allServices, setAllServices] = useState(null); // booking catalogue
+  // Unfiltered catalog total for the hero SERVICES stat. Fetched ONCE via a
+  // dedicated COUNT endpoint, independent of every filter — so it never
+  // changes when category/branch/gender/search params change.
+  const [totalServiceCount, setTotalServiceCount] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
 
   // ---- Append-only "View More" pagination (internal state, NOT in URL) ----
@@ -279,6 +285,15 @@ function ServicesContent() {
     getAllActiveServices()
       .then((data) => {
         if (requestIdRef.current === requestId) setAllServices(data);
+      })
+      .catch(() => {});
+
+    // Hero total — resolves independently of the filtered listing so filter
+    // changes never alter it (and a failure in one doesn't blank the other).
+    // Cached after the first visit; Retry's clearServicesCache() refetches it.
+    getTotalServiceCount()
+      .then((count) => {
+        if (requestIdRef.current === requestId) setTotalServiceCount(count);
       })
       .catch(() => {});
 
@@ -534,7 +549,7 @@ function ServicesContent() {
   return (
     <>
       <ServicesHero
-        serviceCount={pagination?.total ?? services.length}
+        serviceCount={totalServiceCount}
         categoryCount={categories.length}
         branches={branches}
       />
@@ -692,7 +707,7 @@ function ServicesContent() {
                     this container scrolls; the page never gains horizontal
                     overflow (Part 10). Negative margins + matching padding
                     let chips run edge-to-edge inside the section padding. */}
-                <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:-mx-8 sm:px-8">
+                <div className="tnh-subcategory-scroll -mx-5 flex gap-2 px-5 pb-3 sm:-mx-8 sm:px-8">
                   <button
                     type="button"
                     onClick={() => handleSelectSubCategory("all")}
@@ -814,7 +829,7 @@ function ServicesContent() {
                   )}
                 </div>
 
-                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+                <div className="tnh-subcategory-scroll -mx-4 flex gap-2 px-4 pb-3">
                   <button
                     type="button"
                     onClick={() => handleSelectSubCategory("all")}

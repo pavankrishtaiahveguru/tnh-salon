@@ -29,13 +29,12 @@ const services = [
     image: "/images/services/facial.jpg",
     size: "large",
   },
-
   {
     name: "Nails — Manicure, Pedicure, Extensions & Nail Art",
     category: "Nails",
     description:
       "Manicure, Pedicure, nail extensions, BIAB, Russian manicure, Infills/Refills, safe nail removal and custom nail art including French, chrome and 3D designs.",
-    image: "/images/services/nail-extensions.jpg",
+    image: "/images/services/nails.jpg",
     size: "medium",
   },
 
@@ -44,7 +43,7 @@ const services = [
     category: "Skin",
     description:
       "Waxing and de-tan for face and body. Single-use spatulas, hygiene protocol shared openly, with appointments available at both salons.",
-    image: "/images/services/pedi.jpg",
+    image: "/images/services/detan-waxing.jpeg",
     size: "medium",
   },
 

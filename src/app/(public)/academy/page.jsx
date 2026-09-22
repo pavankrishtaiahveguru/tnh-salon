@@ -45,7 +45,7 @@ const nailLevels = [
     level: "LEVEL 1",
     title: "Nail essentials",
     description: "For professionals tightening their fundamentals.",
-    tags: ["DURATION", "FEE", "CERTIFICATION"],
+    tags: ["3 Days", "10000 INR", "CERTIFICATION"],
     points: [
       "Natural nail assessment and diagnosis",
       "Preparation and structure",
@@ -60,7 +60,7 @@ const nailLevels = [
     level: "LEVEL 2",
     title: "Nail extensions",
     description: "For technicians building extension work.",
-    tags: ["DURATION", "FEE", "CERTIFICATION"],
+    tags: ["10 days", "20000 INR", "CERTIFICATION"],
     points: [
       "Gel, acrylic and BIAB systems",
       "Structural design and apex control",
@@ -75,7 +75,7 @@ const nailLevels = [
     level: "LEVEL 3",
     title: "Advanced nail art",
     description: "For technicians building a signature style.",
-    tags: ["DURATION", "FEE", "CERTIFICATION"],
+    tags: ["5 days", "15000 INR", "CERTIFICATION"],
     points: [
       "Hand-painted work and detailing",
       "Chrome, cat-eye and texture effects",
@@ -93,7 +93,7 @@ const hairLevels = [
     level: "LEVEL 1",
     title: "Precision cutting & styling",
     description: "For stylists sharpening technical cutting.",
-    tags: ["DURATION", "FEE", "CERTIFICATION"],
+    tags: ["8 Days", "10000 INR", "CERTIFICATION"],
     points: [
       "Hair and scalp assessment",
       "Sectioning and precision cutting",
@@ -109,7 +109,7 @@ const hairLevels = [
     level: "LEVEL 2",
     title: "Colour",
     description: "For stylists working with confidence.",
-    tags: ["DURATION", "FEE", "CERTIFICATION"],
+    tags: ["10 days", "35000 INR", "CERTIFICATION"],
     points: [
       "Colour theory and formulation logic",
       "Balayage and placement",
@@ -125,7 +125,7 @@ const hairLevels = [
     level: "LEVEL 3",
     title: "Correction & chemical services",
     description: "For the most technical work on the floor.",
-    tags: ["DURATION", "FEE", "CERTIFICATION"],
+    tags: ["5 days", "25000 INR", "CERTIFICATION"],
     points: [
       "Colour correction",
       "Keratin and smoothing",
