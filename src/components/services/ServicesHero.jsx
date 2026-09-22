@@ -74,7 +74,7 @@ export default function ServicesHero({
 
           {/* Buttons */}
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link
+            {/* <Link
               href="/book"
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-[#218F87] px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#197B74]"
             >
@@ -83,11 +83,11 @@ export default function ServicesHero({
                 size={17}
                 className="transition-transform duration-300 group-hover:translate-x-1"
               />
-            </Link>
+            </Link> */}
 
             <a
               href="#service-categories"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#173B38]/20 bg-white px-7 py-3.5 text-sm font-semibold text-[#173B38] transition-all duration-300 hover:border-[#218F87] hover:bg-[#218F87] hover:text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[#173B38]/20 bg-[#218F87] px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:border-[#218F87] hover:bg-[#197B74] hover:text-white"
             >
               <Sparkles size={16} />
               Explore Services

@@ -304,7 +304,7 @@ export default function AiChatWidget() {
               <div className="flex min-w-0 items-center gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm">
                   <Image
-                    src="/ai-bot.png"
+                    src="/images/ai-bot.png"
                     alt=""
                     width={32}
                     height={32}

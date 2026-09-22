@@ -377,6 +377,7 @@ export default function AcademyPage() {
                     alt="The Nail Hue Academy training"
                     fill
                     priority={index === 0}
+                    loading="eager"
                     sizes="(max-width: 1023px) calc(100vw - 40px), 380px"
                     className={`object-cover transition-opacity duration-1000 ease-in-out ${
                       index === currentImage ? "opacity-100" : "opacity-0"
