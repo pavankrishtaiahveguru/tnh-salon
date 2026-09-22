@@ -23,7 +23,7 @@ export default function FloatingButtons() {
         {/* AI chat assistant */}
       </div>
 
-      <div className="fixed bottom-6 right-8 z-50 flex flex-col gap-4 md:bottom-7 md:right-7 md:gap-5">
+      <div className="fixed bottom-6 right-8 z-30 flex flex-col gap-4 md:bottom-7 md:right-7 md:gap-5">
 
         {/* WhatsApp */}
         <a
