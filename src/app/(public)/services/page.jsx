@@ -793,7 +793,7 @@ function ServicesContent() {
                           : "border-[#D7EAE7] bg-white text-[#456764] hover:border-[#3DD4C8]"
                       }`}
                     >
-                      {subCategory.name} {subCategory.count}
+                      {subCategory.name} ({subCategory.count})
                     </button>
                   ))}
                 </div>
@@ -911,7 +911,7 @@ function ServicesContent() {
                           : "border-[#D7EAE7] bg-white text-[#456764] hover:border-[#3DD4C8]"
                       }`}
                     >
-                      {subCategory.name} {subCategory.count}
+                      {subCategory.name} ({subCategory.count})
                     </button>
                   ))}
                 </div>
