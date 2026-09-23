@@ -4,6 +4,7 @@
 // The backend (MySQL) is the source of truth. Same signatures/shapes as the
 // previous static-data layer, so admin pages keep working unchanged.
 import api, { ApiError } from "@/lib/api";
+import { clearServicesCache } from "@/lib/services";
 
 function mapCategoryRow(row) {
   return {
@@ -25,7 +26,13 @@ function mapCategoryRow(row) {
         // names are NOT unique in practice (Nails had "Removal & Refills"
         // twice), so they must never be used for selection/mapping.
         slug: sub.slug ?? String(sub.id),
+        // Raw numeric sub_categories.id — only this (never the slug or
+        // name) is accepted by the reorder endpoint, so drag-and-drop
+        // reordering can uniquely target a row even when two sub-categories
+        // in the same category share a display name.
+        dbId: Number(sub.id),
         name: sub.name,
+        displayOrder: sub.display_order ?? 0,
         serviceCount: sub.service_count ?? 0,
       }),
     ),
@@ -107,6 +114,31 @@ export async function reorderCategory(id, direction) {
     );
   }
   return payload;
+}
+
+// PUT /api/categories/:categoryId/subcategories/reorder
+// `items` = [{ id: <numeric sub_categories.id>, displayOrder: <int> }, ...],
+// one entry per PERSISTED sub-category currently in this category (the
+// backend rejects a partial list). Like reorderCategory, success is only
+// reported once the server confirms the write — never assumed from the
+// optimistic local reorder.
+export async function reorderSubCategories(categoryId, items) {
+  const payload = await api.put(
+    `/api/categories/${encodeURIComponent(categoryId)}/subcategories/reorder`,
+    { items },
+  );
+  if (!payload?.success) {
+    throw new ApiError(
+      payload?.message ?? "Unable to update sub-category order.",
+      0,
+    );
+  }
+  // The public Services page (subcategory chips) and the Add/Edit Service
+  // dropdowns all read category data through this same cached layer — clear
+  // it so the new order is visible immediately instead of waiting out the
+  // 60s TTL.
+  clearServicesCache();
+  return extractOne(payload);
 }
 
 // DELETE /api/categories/:id — resolves to true/false like the previous layer.

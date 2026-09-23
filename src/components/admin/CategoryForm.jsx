@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, X, Plus, Trash2, Pencil, Check } from "lucide-react";
+import { Save, X, Plus, Trash2, Pencil, Check, ArrowUp, ArrowDown } from "lucide-react";
 import { SERVICE_STATUSES } from "@/lib/admin/config";
-import { createCategory, updateCategory } from "@/lib/admin/categories";
+import {
+  createCategory,
+  updateCategory,
+  reorderSubCategories,
+} from "@/lib/admin/categories";
 import { TextInput, TextArea, Select, FormSection } from "./AdminFields";
 import ImageUpload from "./ImageUpload";
 import { useAdminToast } from "./AdminToast";
@@ -22,9 +26,12 @@ export default function CategoryForm({ category }) {
     image: category?.image ?? "",
     // Keep the full { id, name } objects — the backend diff-syncs by id so
     // existing sub-categories keep their DB rows (and their services'
-    // sub_category_id links) when the category is saved.
+    // sub_category_id links) when the category is saved. `dbId` (the raw
+    // numeric sub_categories.id) is carried separately for reordering —
+    // undefined for a sub-category the admin just added and hasn't saved yet.
     subCategories: (category?.subCategories ?? []).map((sub) => ({
       id: sub.id,
+      dbId: sub.dbId,
       name: sub.name,
     })),
   }));
@@ -35,6 +42,60 @@ export default function CategoryForm({ category }) {
   const [newSubName, setNewSubName] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingName, setEditingName] = useState("");
+
+  // ---- Up/Down sub-category reordering ----
+  // Only sub-categories that already exist in the DB (have a `dbId`) can be
+  // moved — a just-added, unsaved entry has no id yet for the reorder
+  // endpoint to target, and reordering only makes sense once the category
+  // itself has been created (isEdit).
+  const canReorder = isEdit;
+  const [isReordering, setIsReordering] = useState(false);
+  // Guards against a stale response from an earlier reorder overwriting the
+  // result of a newer one — only the most recent request may apply its
+  // outcome (toast + local state). The buttons are also disabled while
+  // isReordering is true, so in practice this is a second line of defense.
+  const reorderTokenRef = useRef(0);
+
+  const moveSubCategory = async (index, direction) => {
+    if (!canReorder || isReordering) return;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= form.subCategories.length) return;
+
+    const previous = form.subCategories;
+    const sub = previous[index];
+    const targetSub = previous[targetIndex];
+    // Only swap two PERSISTED rows — an unsaved entry (no dbId) has nothing
+    // for the reorder endpoint to target.
+    if (sub?.dbId == null || targetSub?.dbId == null) return;
+
+    const next = [...previous];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    setField("subCategories", next); // 1. update the UI immediately
+
+    const items = next
+      .filter((s) => s.dbId != null)
+      .map((s, position) => ({ id: s.dbId, displayOrder: position }));
+
+    const token = ++reorderTokenRef.current;
+    setIsReordering(true);
+    try {
+      await reorderSubCategories(category.id, items); // 2. persist to the DB
+      if (reorderTokenRef.current === token) {
+        toast.success("Subcategory order updated");
+      }
+    } catch (error) {
+      if (reorderTokenRef.current === token) {
+        setField("subCategories", previous); // restore — never show an
+        // order that failed to save
+        toast.error(
+          error?.message ??
+            "Failed to update subcategory order. Please try again.",
+        );
+      }
+    } finally {
+      if (reorderTokenRef.current === token) setIsReordering(false);
+    }
+  };
 
   const setField = (field, value) =>
     setForm((current) => ({ ...current, [field]: value }));
@@ -209,11 +270,21 @@ export default function CategoryForm({ category }) {
           </p>
         ) : (
           <ul className="space-y-2">
-            {form.subCategories.map((sub, index) => (
-              <li
-                key={`${sub}-${index}`}
-                className="flex items-center justify-between gap-3 rounded-lg border border-[#D7EAE7] bg-[#F9FCFB] px-3 py-2"
-              >
+            {form.subCategories.map((sub, index) => {
+              const isPersisted = sub.dbId != null;
+              const prevPersisted = index > 0 && form.subCategories[index - 1]?.dbId != null;
+              const nextPersisted =
+                index < form.subCategories.length - 1 &&
+                form.subCategories[index + 1]?.dbId != null;
+              const canMoveUp =
+                canReorder && isPersisted && prevPersisted && !isReordering;
+              const canMoveDown =
+                canReorder && isPersisted && nextPersisted && !isReordering;
+              return (
+                <li
+                  key={sub.dbId ?? `${sub.id}-${index}`}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[#D7EAE7] bg-[#F9FCFB] px-3 py-2 transition-colors"
+                >
                 {editingIndex === index ? (
                   <>
                     <input
@@ -239,8 +310,32 @@ export default function CategoryForm({ category }) {
                   </>
                 ) : (
                   <>
-                    <span className="truncate text-sm text-[#09221F]">
-                      {sub.name}
+                    <span className="flex min-w-0 items-center gap-3">
+                      {canReorder && (
+                        <span className="flex shrink-0 flex-col gap-1">
+                          <button
+                            type="button"
+                            disabled={!canMoveUp}
+                            onClick={() => moveSubCategory(index, "up")}
+                            aria-label={`Move ${sub.name} up`}
+                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#D7EAE7] text-[#3E5450] transition-colors hover:bg-[#EAF6F4] disabled:cursor-not-allowed disabled:opacity-35"
+                          >
+                            <ArrowUp size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!canMoveDown}
+                            onClick={() => moveSubCategory(index, "down")}
+                            aria-label={`Move ${sub.name} down`}
+                            className="flex h-7 w-7 items-center justify-center rounded-md border border-[#D7EAE7] text-[#3E5450] transition-colors hover:bg-[#EAF6F4] disabled:cursor-not-allowed disabled:opacity-35"
+                          >
+                            <ArrowDown size={13} />
+                          </button>
+                        </span>
+                      )}
+                      <span className="truncate text-sm text-[#09221F]">
+                        {sub.name}
+                      </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
                       <button
@@ -262,8 +357,9 @@ export default function CategoryForm({ category }) {
                     </span>
                   </>
                 )}
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </FormSection>
