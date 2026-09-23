@@ -253,11 +253,35 @@ function ServicesContent() {
   const selectedCategory = categoryParam || "all";
   const selectedSubCategory = subCategoryParam || "all";
 
-  // Sub-category chips come from the server's facet counts. They're only
-  // shown when they belong to the currently selected category, so switching
-  // categories never flashes the previous category's chips.
-  const availableSubCategories =
-    facetCategory === selectedCategory ? subCategories : [];
+  // Subcategory chips come from the CATEGORY's subcategory list (the same
+  // GET /api/categories response Admin uses) — NOT from the currently loaded
+  // service page. Facet counts derived from services can never include a
+  // subcategory with zero mapped services or one whose services sit beyond
+  // page 1, so building chips from them makes valid subcategories disappear
+  // (e.g. Bleach & D-Tan showed only "Women 14" while Arms & Underarms, Body
+  // & Legs, Face and Face & Neck were dropped). The category metadata is
+  // already fetched by this page, so no extra request is needed. Facet
+  // counts (filter-scoped, computed server-side in the services response)
+  // are overlaid when available; otherwise the category API's per-sub
+  // service_count is shown. Counts are never hardcoded.
+  const selectedCategoryData = categories.find(
+    (category) => category.id === selectedCategory,
+  );
+  const availableSubCategories = (selectedCategoryData?.subCategories ?? []).map(
+    (sub) => {
+      const facet =
+        facetCategory === selectedCategory
+          ? subCategories.find((f) => f.name === sub.name)
+          : undefined;
+      return {
+        // slug is unique per category — a stable React key (display names can
+        // repeat, e.g. two "Removal & Refills" rows under Nails).
+        slug: sub.slug ?? sub.id,
+        name: sub.name,
+        count: facet ? facet.count : (sub.serviceCount ?? 0),
+      };
+    },
+  );
 
   // ---- Server-backed fetching (page 1 / filter changes) ---------------------
   // Runs on mount and whenever any filter/search/sort changes. ALWAYS requests
@@ -760,7 +784,7 @@ function ServicesContent() {
 
                   {availableSubCategories.map((subCategory) => (
                     <button
-                      key={subCategory.name}
+                      key={subCategory.slug || subCategory.name}
                       type="button"
                       onClick={() => handleSelectSubCategory(subCategory.name)}
                       className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${
@@ -878,7 +902,7 @@ function ServicesContent() {
 
                   {availableSubCategories.map((subCategory) => (
                     <button
-                      key={subCategory.name}
+                      key={subCategory.slug || subCategory.name}
                       type="button"
                       onClick={() => handleSelectSubCategory(subCategory.name)}
                       className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors sm:px-6 sm:py-3 ${

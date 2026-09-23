@@ -28,7 +28,15 @@ export default function ServiceForm({ service }) {
   const [form, setForm] = useState(() => ({
     name: service?.name ?? "",
     categoryId: service?.categoryId ?? "",
-    subCategory: service?.subCategory ?? "",
+    // Holds the selected sub-category's STABLE SLUG (sub_categories.slug),
+    // not its display name. Names are not unique within a category in
+    // practice (e.g. two "Removal & Refills" rows existed under Nails), so
+    // a name could bind the service to the wrong sub_categories row. The
+    // slug is unique per category (uq_subcategory_category_slug) and is
+    // what gets sent as `subCategoryId` on save; the backend resolves it
+    // against the selected category and rejects mismatches with a 400.
+    // Fall back to the name for pre-migration rows so editing still works.
+    subCategory: service?.subCategorySlug ?? service?.subCategory ?? "",
     gender: service?.gender ?? "Unisex",
     description: service?.description ?? "",
     pricingType: service?.pricingType ?? "fixed",
@@ -176,10 +184,17 @@ export default function ServiceForm({ service }) {
   };
 
   // Sub-category options follow the selected category (from the backend).
+  // option.value = the sub's stable SLUG (uq_subcategory_category_slug makes
+  // it unique per category); option.label = display name. Selection is by ID
+  // (slug), never by name matching — a newly added subcategory appears here
+  // immediately because `categories` is refetched on every form mount.
   const subCategoryOptions = (() => {
     const category = categories.find((c) => c.id === form.categoryId);
     if (!category) return [];
-    return category.subCategories.map((sub) => sub.name);
+    return category.subCategories.map((sub) => ({
+      value: sub.slug ?? sub.id ?? sub.name,
+      label: sub.name,
+    }));
   })();
 
   if (loadError) {

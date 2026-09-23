@@ -25,6 +25,16 @@ export function mapServiceRow(row) {
     categoryId: row.category_slug ?? String(row.category_id ?? ""),
     category: row.category_name ?? "",
     subCategory: row.subcategory_name ?? null,
+    // Stable identifier (sub_categories.slug) — used as the sub-category
+    // select value and sent as `subCategoryId` on save. Names are NOT safe
+    // identifiers: the live catalog contains same-name subs under one
+    // category (e.g. Nails had "Removal & Refills" twice), and
+    // resolveSubCategoryId() matches by name case-insensitively, so a name
+    // could silently resolve to the wrong row. The slug is unique per
+    // category (uq_subcategory_category_slug) and is preserved by the
+    // category save flow (no delete/recreate), so it never drifts.
+    subCategorySlug: row.subcategory_slug ?? null,
+    subCategoryId: row.sub_category_id != null ? String(row.sub_category_id) : null,
     name: row.name,
     gender: row.audience ?? "Unisex",
     description: row.description ?? "",
@@ -83,22 +93,25 @@ export async function getServiceById(id) {
   return extractOne(payload);
 }
 
-function slugify(value) {
-  return String(value ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
 // Convert the admin form payload into the backend's expected body. Category
-// and sub-category are sent as slugs (the backend resolves them per category).
+// is sent as a slug; sub-category is sent as its STABLE SLUG under
+// `subCategoryId` (the field the backend controller actually reads —
+// resolveSubCategoryId() in serviceController.js accepts a numeric id, slug,
+// OR name, matched against the selected category's subs). Slugs are safer
+// than names: display names are not unique within a category in practice
+// (e.g. two "Removal & Refills" rows existed under Nails), and a name match
+// could silently bind the service to the wrong sub_categories row. The slug
+// is unique per category (uq_subcategory_category_slug) and preserved by the
+// category save flow, so it cannot drift the way a re-derived slug could.
 function toBackendPayload(data) {
   const branchIds = data.branchIds ?? [];
   return {
     name: data.name,
     categoryId: data.categoryId,
-    subCategory: data.subCategory ? slugify(data.subCategory) : null,
+    // The ServiceForm holds the selected sub's slug in form.subCategory.
+    // Fall back to the mapped row's slug for callers that pass the mapped
+    // object straight through; empty string → null clears the mapping.
+    subCategoryId: data.subCategory || data.subCategorySlug || null,
     audience: data.gender,
     description: data.description ?? "",
     pricingType: data.pricingType,

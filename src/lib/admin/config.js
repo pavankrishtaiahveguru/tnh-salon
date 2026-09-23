@@ -18,7 +18,7 @@ export const BRANCHES = [
   { id: "sarjapur-road", name: "Sarjapur Road" },
 ];
 
-export const GENDERS = ["Women", "Men", "Unisex", "Girls", "Boys"];
+export const GENDERS = ["Unisex", "Women", "Men"];
 
 export const SERVICE_STATUSES = ["Active", "Inactive"];
 
@@ -33,13 +33,7 @@ export const BRANCH_FILTER_OPTIONS = [
 ];
 
 // "Any audience" is the empty-value placeholder; these are the options.
-export const GENDER_FILTER_OPTIONS = [
-  "Women",
-  "Men",
-  "Unisex",
-  "Girls",
-  "Boys",
-];
+export const GENDER_FILTER_OPTIONS = ["Unisex", "Women", "Men"];
 
 // Rows per page on the admin services table.
 export const SERVICES_PAGE_SIZE = 20;

@@ -18,6 +18,13 @@ function mapCategoryRow(row) {
     subCategories: (row.subcategories ?? row.sub_categories ?? []).map(
       (sub) => ({
         id: sub.slug ?? String(sub.id),
+        // Stable identifier sent as `subCategoryId` by the service form.
+        // Unique per category (uq_subcategory_category_slug) and preserved
+        // by the category save flow (diff-sync updates names in place —
+        // never delete/recreate), so it can be relied on as an ID. Display
+        // names are NOT unique in practice (Nails had "Removal & Refills"
+        // twice), so they must never be used for selection/mapping.
+        slug: sub.slug ?? String(sub.id),
         name: sub.name,
         serviceCount: sub.service_count ?? 0,
       }),
