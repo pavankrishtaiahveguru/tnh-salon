@@ -201,31 +201,23 @@ export function buildWhatsAppMessage({
   selectedTime,
 }) {
   const lines = [
-    "Hi The Nail Hue, I'd like to book an appointment.",
+    "Hi! I'd like to book an appointment at The Nail Hue",
     "",
-    "Services",
-    "",
+    `📍 Branch: ${studioName ?? ""}`,
+    `📅 Date: ${formatDateDisplay(date)}`,
+    `🕐 Preferred time: ${selectedTime ?? ""}`,
+    "✂️ Services requested:",
   ];
   selectedServices.forEach((entry, index) => {
-    const variant = getSelectedVariant(entry.service, entry.selectedVariantId);
-    const price = selectedPrice(entry);
-    const priceText = isPriceExact(entry)
-      ? formatPrice(price)
-      : `from ${formatPrice(price)}`;
-    lines.push(`${index + 1}. ${entry.service.name} — ${priceText}`);
-    if (variant) lines.push(`   ${variant.label}`);
-    else if (entry.service.duration) lines.push(`   ${entry.service.duration}`);
-    lines.push("");
+    lines.push(`       ${index + 1}) ${entry?.service?.name ?? ""}`);
   });
-  const { total, allExact } = computeBookingTotal(selectedServices);
   lines.push(
-    `${allExact ? "Estimated total" : "Estimated total from"}: ${formatPrice(total)}`,
+    "",
+    `👤 Name: ${customerName ?? ""}`,
+    `📱 Phone: ${phone ?? ""}`,
+    "",
+    "Please confirm my booking. Thank you!",
   );
-  lines.push(`Branch: ${studioName}`);
-  lines.push(`Date: ${formatDateDisplay(date)}`);
-  lines.push(`Time: ${selectedTime}`);
-  lines.push(`Name: ${customerName}`);
-  lines.push(`Phone: ${phone}`, "", "Please confirm my appointment.");
   return lines.join("\n");
 }
 

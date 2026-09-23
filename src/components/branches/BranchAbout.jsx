@@ -5,93 +5,280 @@ export default function BranchAbout({ branch }) {
 
   return (
     <section className="bg-[#294946] px-6 py-20 text-white sm:px-10 md:py-24 lg:px-16 lg:py-32">
-      <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
-        {/* Content */}
-        <div>
-          {/* Heading - Same elegant serif style as Hero */}
-          <h2 className="max-w-3xl font-serif text-4xl font-medium leading-[1.08] tracking-[-0.025em] text-[#20C4B7] sm:text-5xl md:text-[54px] lg:text-[60px]">
-            {branch.aboutTitle}
+      <div className="mx-auto grid max-w-7xl items-start gap-14 lg:grid-cols-[1.15fr_0.85fr] lg:gap-20">
+        {/* =========================
+            CONTENT
+        ========================== */}
+        <div className="min-w-0">
+          {/* Heading */}
+          <h2 className="max-w-2xl font-serif text-4xl font-medium leading-[1.08] tracking-[-0.025em] text-[#20C4B7] sm:text-5xl md:text-[54px] lg:text-[60px]">
+            {isIndiranagar
+              ? "Hair, Nails & Skin Salon in Indiranagar, Bengaluru"
+              : "Nail, Hair & Skin Salon in Sarjapur Road, Bengaluru"}
           </h2>
 
-          {/* About Content */}
           {isIndiranagar ? (
-            <div className="mt-10 max-w-3xl space-y-7 text-base font-normal leading-8 tracking-[-0.01em] text-white/85 sm:text-lg lg:text-[18px]">
-              <p>
-                Welcome to Nail Hue Salon, the best nail salon in Indiranagar
-                and the ultimate destination for beauty and self-care. Our salon
-                is committed to transforming your beauty experience into
-                something truly extraordinary. At Nail Hue, we seamlessly blend
-                elegance with expertise, offering a sanctuary where you can
-                escape from the everyday and indulge in top-quality hair and
-                nail services.
-              </p>
+            /* =========================
+               INDIRANAGAR
+            ========================== */
+            <div className="mt-10 max-w-2xl space-y-10 text-base font-normal leading-8 tracking-[-0.01em] text-white/85 sm:text-lg lg:text-[18px]">
+              {/* Introduction */}
+              <div>
+                <p className="text-justify">
+                  The Nail Hue is a hair, nail, and skin salon serving
+                  Indiranagar and the surrounding East Bengaluru neighbourhoods,
+                  including areas around 100 Feet Road, HAL 2nd Stage, Domlur,
+                  and Ulsoor. Whether you're looking for a quick manicure
+                  between meetings or a full hair appointment on the weekend,
+                  our Indiranagar salon is built around convenience,
+                  consistency, and genuine care for what each client actually
+                  wants.
+                </p>
+              </div>
 
-              <p>
-                As you step into our chic and modern space, you’ll immediately
-                feel the ambiance of sophistication and warmth. Our team of
-                skilled professionals is passionate about their craft and
-                dedicated to delivering results that exceed your expectations.
-                Whether you’re in for a stylish haircut, a bold new hair color,
-                or a complete hair makeover, we tailor our services to match
-                your unique style and personality. We also take pride in
-                offering the best haircuts for kids, ensuring that even the
-                youngest members of your family receive exceptional care.
-              </p>
+              {/* Hair */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Hair Salon in Indiranagar
+                </h3>
 
-              <p>
-                When it comes to nails, Nail Hue Salon is your go-to destination
-                for creativity and precision. Our nail studio is renowned for
-                its mastery in delivering everything from intricate nail art and
-                vibrant gel polish to elegant extensions. We use only the finest
-                products to ensure that your nails not only look stunning but
-                also remain healthy and strong. Whether you’re preparing for a
-                special occasion or simply treating yourself, our manicure and
-                pedicure services are designed to make you feel fabulous. Our
-                dedicated team is here to provide you with a luxurious and
-                personalized experience, ensuring that you leave our salon
-                looking and feeling your absolute best.
-              </p>
+                <p className="mb-4 text-justify">
+                  Our hair services cover the everyday and the occasion-worthy,
+                  including:
+                </p>
+
+                <ul className="list-disc space-y-1.5 pl-6 text-left">
+                  <li>Haircuts</li>
+                  <li>Hair styling</li>
+                  <li>Hair colouring</li>
+                  <li>Hair treatments</li>
+                  <li>Hair spa</li>
+                </ul>
+
+                <p className="mt-5 text-justify">
+                  Our stylists take the time to understand your hair texture and
+                  goals before recommending a service, rather than pushing a
+                  one-size-fits-all approach.
+                </p>
+              </div>
+
+              {/* Nails */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Nail Salon in Indiranagar
+                </h3>
+
+                <p className="mb-4 text-justify">
+                  Nails remain one of the things The Nail Hue is best known for
+                  in Indiranagar. Our nail menu includes:
+                </p>
+
+                <ul className="list-disc space-y-1.5 pl-6 text-left">
+                  <li>Manicure</li>
+                  <li>Pedicure</li>
+                  <li>Nail extensions</li>
+                  <li>Gel nails</li>
+                  <li>Nail art</li>
+                </ul>
+
+                <p className="mt-5 text-justify">
+                  Each appointment is approached with attention to hygiene and
+                  finish, whether you're coming in for a simple polish change or
+                  a more elaborate nail art design ahead of an event.
+                </p>
+              </div>
+
+              {/* Skin */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Skin Cleanups in Indiranagar
+                </h3>
+
+                <p className="text-justify">
+                  For skin, we keep things simple and focused with professional
+                  cleanups, a straightforward way to refresh your skin without
+                  committing to a longer facial appointment. It's a popular
+                  add-on for clients looking to fit basic skincare into a quick
+                  visit alongside a haircut or manicure.
+                </p>
+              </div>
+
+              {/* Experience */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Your Beauty Destination in Indiranagar
+                </h3>
+
+                <p className="text-justify">
+                  What brings hair, nails, and skin together at The Nail Hue is
+                  a consistent standard of care across every service. Our team
+                  is trained across all three categories, so a single visit can
+                  cover more than one need — a haircut and manicure, or a
+                  cleanup and pedicure, for instance — without compromising on
+                  attention to detail. The salon is designed to feel relaxed
+                  rather than rushed, whether you're a first-time visitor or a
+                  regular.
+                </p>
+              </div>
+
+              {/* Visit */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Visit The Nail Hue in Indiranagar, Bengaluru
+                </h3>
+
+                <p className="text-justify">
+                  The Nail Hue offers hair, nail, and skin services from its
+                  Indiranagar salon in Bengaluru, conveniently placed for
+                  clients across Indiranagar, Domlur, Ulsoor, and Jeevan Bima
+                  Nagar. If you're searching for a salon in Indiranagar that
+                  handles hair, nails, and skin under one roof, we'd be glad to
+                  have you visit — book an appointment online or call ahead to
+                  check availability.
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="mt-10 max-w-3xl space-y-7 text-base font-normal leading-8 tracking-[-0.01em] text-white/85 sm:text-lg lg:text-[18px]">
-              <p>
-                Hey there! Welcome to Nail Hue, best Salon in Sarjapur—
-                <strong className="font-semibold text-white">
-                  your go-to spot for all things beauty and relaxation.
-                </strong>{" "}
-                At our vibrant and friendly salon, we’re all about making you
-                look and feel fantastic. Whether you’re in the mood for a fresh
-                haircut, a bold new color, or stunning nails that turn heads,
-                our talented team is here to deliver.
-              </p>
+            /* =========================
+               SARJAPUR ROAD
+            ========================== */
+            <div className="mt-10 max-w-2xl space-y-10 text-base font-normal leading-8 tracking-[-0.01em] text-white/85 sm:text-lg lg:text-[18px]">
+              {/* Introduction */}
+              <div>
+                <p className="text-justify">
+                  The Nail Hue on Sarjapur Road is a full-service salon for
+                  hair, nails, and skin, located at PNR Pride on
+                  Sarjapur–Marathahalli Road, just behind Indriya (Aditya Birla
+                  Jewellery) in Doddakannelli. If you're looking for a reliable
+                  beauty salon in Sarjapur or a nail salon near Sarjapur Road,
+                  our team blends technical skill with a relaxed, welcoming
+                  atmosphere — whether you're popping in for a quick manicure or
+                  settling in for a full hair transformation.
+                </p>
+              </div>
 
-              <p>
-                Our extensive range of services is designed to cater to every
-                aspect of your beauty routine. From the moment you step into our
-                chic and welcoming space, you’ll experience the artistry and
-                precision of our expert team. We offer a full spectrum of hair
-                services, from trendy cuts and vibrant color transformations to
-                sophisticated styling that’s perfect for any occasion. Our
-                stylists are skilled in the latest techniques and trends,
-                ensuring you leave looking and feeling your absolute best.
-              </p>
+              {/* Hair */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Hair Services at The Nail Hue Sarjapur Road
+                </h3>
 
-              <p>
-                In addition to our exceptional hair and nail services, we offer
-                a range of vegan facials and hair spa treatments that emphasize
-                relaxation and rejuvenation. Our facials are designed to be both
-                effective and gentle, using only vegan and cruelty-free products
-                that cater to all skin types. Our hair spa services are crafted
-                to provide a tranquil escape, helping you unwind and revitalize
-                in a serene environment.
-              </p>
+                <p className="mb-4 text-justify">
+                  Our stylists offer a complete range of hair services for
+                  everyday maintenance and special occasions alike, including:
+                </p>
+
+                <ul className="list-disc space-y-1.5 pl-6 text-left">
+                  <li>Haircuts</li>
+                  <li>Hair styling</li>
+                  <li>Hair colouring</li>
+                  <li>Hair treatments</li>
+                  <li>Hair spa</li>
+                </ul>
+
+                <p className="mt-5 text-justify">
+                  Whether you're after a subtle trim or a bolder colour change,
+                  our team takes the time to understand what works for your hair
+                  type and lifestyle before recommending a service.
+                </p>
+              </div>
+
+              {/* Nails */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Nail Services in Sarjapur Road
+                </h3>
+
+                <p className="mb-4 text-justify">
+                  Nails are at the heart of what we do, and our Sarjapur Road
+                  branch offers the full spectrum of nail care, including:
+                </p>
+
+                <ul className="list-disc space-y-1.5 pl-6 text-left">
+                  <li>Manicure</li>
+                  <li>Pedicure</li>
+                  <li>Nail extensions</li>
+                  <li>Gel nails</li>
+                  <li>Nail art</li>
+                </ul>
+
+                <p className="mt-5 text-justify">
+                  Our technicians work with clean tools and quality products, so
+                  whether you're coming in for routine upkeep or a more detailed
+                  nail art design, you can expect careful, hygienic service
+                  every time.
+                </p>
+              </div>
+
+              {/* Skin */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Skin & Facial Services in Sarjapur
+                </h3>
+
+                <p className="mb-4 text-justify">
+                  Alongside hair and nails, we offer a range of skin and facial
+                  treatments aimed at helping your skin look and feel healthier,
+                  including:
+                </p>
+
+                <ul className="list-disc space-y-1.5 pl-6 text-left">
+                  <li>Facials</li>
+                  <li>Skin treatments</li>
+                  <li>Vegan facials</li>
+                </ul>
+
+                <p className="mt-5 text-justify">
+                  These treatments are a popular add-on for clients in Sarjapur
+                  and Doddakannelli looking for a proper self-care break without
+                  having to travel far from home.
+                </p>
+              </div>
+
+              {/* Experience */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  The TNH Experience
+                </h3>
+
+                <p className="text-justify">
+                  What ties our hair, nail, and skin services together is a
+                  consistent focus on hygiene, comfort, and genuinely listening
+                  to what our clients want. Our Sarjapur Road space is designed
+                  to feel calm and unhurried, so you can relax whether you're
+                  here for a 30-minute pedicure or a longer hair and skin
+                  combination appointment. We keep our tools sanitised and our
+                  processes consistent, so every visit — first-time or regular —
+                  feels dependable.
+                </p>
+              </div>
+
+              {/* Visit */}
+              <div>
+                <h3 className="mb-4 text-xl font-medium text-[#20C4B7] sm:text-2xl">
+                  Visit Us in Sarjapur Road, Bengaluru
+                </h3>
+
+                <p className="text-justify">
+                  Conveniently located on Sarjapur–Marathahalli Road, The Nail
+                  Hue is an easy stop for residents around Doddakannelli,
+                  Sarjapur, and the wider Sarjapur Road stretch of Bengaluru.
+                  We're open seven days a week, making it simple to fit a
+                  haircut, manicure, pedicure, or facial into a busy schedule.
+                  If you're searching for a hair, nail, and skin salon near
+                  Sarjapur Road, we'd love to have you visit — book your
+                  appointment online or give us a call to get started.
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Branch Image */}
-        <div className="relative">
-          <div className="relative aspect-[4/5] w-full overflow-hidden">
+        {/* =========================
+            BRANCH IMAGE
+        ========================== */}
+        <div className="relative lg:sticky lg:top-28">
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-xl overflow-hidden">
             <Image
               src={
                 isIndiranagar
@@ -101,13 +288,13 @@ export default function BranchAbout({ branch }) {
               alt={`${branch.name} Nail Hue salon interior`}
               fill
               priority
-              sizes="(max-width: 1024px) 100vw, 42vw"
+              sizes="(max-width: 1024px) 100vw, 40vw"
               className="object-cover transition-transform duration-700 hover:scale-[1.02]"
             />
           </div>
 
           {/* Decorative Accent */}
-          <div className="absolute -bottom-3 -left-3 h-16 w-16 border-b border-l border-[#20C4B7]/60 sm:-bottom-4 sm:-left-4 sm:h-20 sm:w-20" />
+          <div className="absolute -bottom-4 -left-4 h-20 w-20 border-b border-l border-[#20C4B7]/60" />
         </div>
       </div>
     </section>
