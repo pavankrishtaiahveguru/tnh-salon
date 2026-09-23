@@ -50,7 +50,10 @@ export default function CategoryTable({
                 <button
                   type="button"
                   disabled={
-                    movingId === category.id || category === categories[0]
+                    // Disable ALL move buttons while any reorder is in flight —
+                    // rapid ↑/↓ clicks on different rows must not interleave
+                    // conflicting requests.
+                    movingId !== null || category === categories[0]
                   }
                   onClick={() => onMove(category, "up")}
                   aria-label={`Move ${category.name} up`}
@@ -61,7 +64,7 @@ export default function CategoryTable({
                 <button
                   type="button"
                   disabled={
-                    movingId === category.id ||
+                    movingId !== null ||
                     category === categories[categories.length - 1]
                   }
                   onClick={() => onMove(category, "down")}

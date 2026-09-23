@@ -20,7 +20,13 @@ export default function CategoryForm({ category }) {
     description: category?.description ?? "",
     status: category?.status ?? "Active",
     image: category?.image ?? "",
-    subCategories: (category?.subCategories ?? []).map((sub) => sub.name),
+    // Keep the full { id, name } objects — the backend diff-syncs by id so
+    // existing sub-categories keep their DB rows (and their services'
+    // sub_category_id links) when the category is saved.
+    subCategories: (category?.subCategories ?? []).map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+    })),
   }));
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -37,18 +43,21 @@ export default function CategoryForm({ category }) {
     const name = newSubName.trim();
     if (!name) return;
     if (
-      form.subCategories.some((sub) => sub.toLowerCase() === name.toLowerCase())
+      form.subCategories.some(
+        (sub) => sub.name.toLowerCase() === name.toLowerCase(),
+      )
     ) {
       toast.error("This sub-category already exists.");
       return;
     }
-    setField("subCategories", [...form.subCategories, name]);
+    // New entries have no id yet — the backend INSERTs them.
+    setField("subCategories", [...form.subCategories, { name }]);
     setNewSubName("");
   };
 
   const startRename = (index) => {
     setEditingIndex(index);
-    setEditingName(form.subCategories[index]);
+    setEditingName(form.subCategories[index]?.name ?? "");
   };
 
   const commitRename = () => {
@@ -60,7 +69,9 @@ export default function CategoryForm({ category }) {
     }
     setField(
       "subCategories",
-      form.subCategories.map((sub, i) => (i === editingIndex ? name : sub)),
+      form.subCategories.map((sub, i) =>
+        i === editingIndex ? { ...sub, name } : sub,
+      ),
     );
     setEditingIndex(null);
   };
@@ -90,7 +101,7 @@ export default function CategoryForm({ category }) {
         description: form.description,
         status: form.status,
         image: form.image,
-        subCategories: form.subCategories.map((name) => ({ name })),
+        subCategories: form.subCategories,
       };
 
       if (isEdit) {
@@ -229,13 +240,13 @@ export default function CategoryForm({ category }) {
                 ) : (
                   <>
                     <span className="truncate text-sm text-[#09221F]">
-                      {sub}
+                      {sub.name}
                     </span>
                     <span className="flex shrink-0 items-center gap-1">
                       <button
                         type="button"
                         onClick={() => startRename(index)}
-                        aria-label={`Rename ${sub}`}
+                        aria-label={`Rename ${sub.name}`}
                         className="flex h-8 w-8 items-center justify-center rounded-md text-[#3E5450] hover:bg-[#EAF6F4] hover:text-[#218F87]"
                       >
                         <Pencil size={14} />
@@ -243,7 +254,7 @@ export default function CategoryForm({ category }) {
                       <button
                         type="button"
                         onClick={() => removeSubCategory(index)}
-                        aria-label={`Remove ${sub}`}
+                        aria-label={`Remove ${sub.name}`}
                         className="flex h-8 w-8 items-center justify-center rounded-md text-[#3E5450] hover:bg-red-50 hover:text-red-600"
                       >
                         <Trash2 size={14} />

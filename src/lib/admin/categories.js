@@ -3,7 +3,7 @@
 // ==================================================
 // The backend (MySQL) is the source of truth. Same signatures/shapes as the
 // previous static-data layer, so admin pages keep working unchanged.
-import api from "@/lib/api";
+import api, { ApiError } from "@/lib/api";
 
 function mapCategoryRow(row) {
   return {
@@ -63,8 +63,8 @@ export async function createCategory(data) {
     image: data.image ?? null,
     isActive: (data.status ?? "Active") === "Active",
     subCategories: (data.subCategories ?? [])
-      .map((sub) => sub.name ?? sub)
-      .filter(Boolean),
+      .map((sub) => ({ id: sub?.id, name: sub?.name ?? sub }))
+      .filter((sub) => Boolean(sub.name)),
   });
   return extractOne(payload);
 }
@@ -77,16 +77,29 @@ export async function updateCategory(id, data) {
     image: data.image ?? null,
     isActive: (data.status ?? "Active") === "Active",
     subCategories: (data.subCategories ?? [])
-      .map((sub) => sub.name ?? sub)
-      .filter(Boolean),
+      .map((sub) => ({ id: sub?.id, name: sub?.name ?? sub }))
+      .filter((sub) => Boolean(sub.name)),
   });
   return extractOne(payload);
 }
 
 export async function reorderCategory(id, direction) {
-  await api.patch(`/api/categories/${encodeURIComponent(id)}/order`, {
-    direction,
-  });
+  const payload = await api.patch(
+    `/api/categories/${encodeURIComponent(id)}/order`,
+    { direction },
+  );
+  // The backend response is the only source of truth: success is only
+  // reported when the server confirms the reorder was applied. A missing or
+  // false flag throws, so the admin UI can never toast "order updated" for a
+  // move the database did not make (also covers edge moves like
+  // "already first" which the backend rejects with 400).
+  if (!payload?.success) {
+    throw new ApiError(
+      payload?.message ?? "Unable to update category order.",
+      0,
+    );
+  }
+  return payload;
 }
 
 // DELETE /api/categories/:id — resolves to true/false like the previous layer.
