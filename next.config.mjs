@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -8,6 +9,16 @@ const nextConfig = {
         pathname: "/eumjdehq/**",
       },
     ],
+  },
+
+  async redirects() {
+    return [
+      {
+        source: "/booking",
+        destination: "/services",
+        permanent: true,
+      },
+    ];
   },
 };
 
