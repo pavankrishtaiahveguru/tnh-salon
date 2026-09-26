@@ -9,7 +9,7 @@
 // static-data layer, so admin pages keep working. API rows are mapped into
 // the existing frontend service structure (including the legacy `branch`
 // label and `branchIds`) without silently dropping fields.
-import api from "@/lib/api";
+import api, { ApiError } from "@/lib/api";
 import { branchIdsToLabel } from "./config";
 import { clearServicesCache } from "@/lib/services";
 
@@ -22,6 +22,10 @@ export function mapServiceRow(row) {
 
   return {
     id: row.slug ?? String(row.id),
+    // Raw numeric services.id — only this (never the slug) is accepted by the
+    // reorder endpoint, so drag-and-drop reordering can uniquely target a
+    // row. Mirrors the `dbId` pattern on admin categories.
+    dbId: Number(row.id),
     categoryId: row.category_slug ?? String(row.category_id ?? ""),
     category: row.category_name ?? "",
     subCategory: row.subcategory_name ?? null,
@@ -81,6 +85,9 @@ export async function getServices(filters = {}) {
   if (filters.branch) params.set("branch", filters.branch);
   if (filters.gender) params.set("audience", filters.gender);
   if (filters.status) params.set("status", filters.status);
+  // Numeric category/sub-category ids scope the admin reorder panel.
+  if (filters.categoryId != null) params.set("categoryId", String(filters.categoryId));
+  if (filters.subCategoryId != null) params.set("subCategoryId", String(filters.subCategoryId));
 
   const query = params.toString();
   const payload = await api.get(`/api/services${query ? `?${query}` : ""}`);
@@ -157,6 +164,45 @@ export async function updateServiceStatus(id, status) {
   );
   clearServicesCache();
   return extractOne(payload);
+}
+
+// GET /api/services/scope?categoryId=&subCategoryId= — the ordered services
+// of ONE category+subcategory scope (display_order ASC, id ASC). Used by the
+// admin reorder panel so it renders the exact persisted order.
+export async function getServicesInScope(categoryId, subCategoryId) {
+  const params = new URLSearchParams({
+    categoryId: String(categoryId),
+    ...(subCategoryId != null ? { subCategoryId: String(subCategoryId) } : {}),
+  });
+  const payload = await api.get(`/api/services/scope?${params.toString()}`);
+  return extractList(payload);
+}
+
+// PUT /api/services/reorder — persist the display order of ONE category +
+// subcategory scope. `items` = [{ id: <numeric services.id>, displayOrder:
+// <int> }, ...], one entry per PERSISTED service currently in that scope
+// (the backend rejects a partial list). Like reorderSubCategories, success
+// is only reported once the server confirms the write — never assumed from
+// the optimistic local reorder.
+export async function reorderServices(categoryId, subCategoryId, items) {
+  const payload = await api.put("/api/services/reorder", {
+    categoryId,
+    subCategoryId,
+    items,
+  });
+  if (!payload?.success) {
+    throw new ApiError(
+      payload?.message ?? "Unable to update service order.",
+      0,
+    );
+  }
+  // The public Services page reads orders through the cached services layer
+  // (src/lib/services.js) — clear it so the new order is visible immediately
+  // instead of waiting out the 60s TTL.
+  clearServicesCache();
+  // The backend response is the source of truth — map the confirmed rows so
+  // callers can refresh state from what the database actually holds.
+  return extractList(payload);
 }
 
 // DELETE /api/services/:id — resolves to true/false like the previous layer.

@@ -18,6 +18,7 @@ import {
   branchLabelToIds,
 } from "@/lib/admin/config";
 import ServiceTable from "@/components/admin/ServiceTable";
+import ServiceOrderPanel from "@/components/admin/ServiceOrderPanel";
 import ServiceViewModal from "@/components/admin/ServiceViewModal";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import AdminPagination from "@/components/admin/AdminPagination";
@@ -69,19 +70,37 @@ export default function AdminServicesPage() {
   }, []);
 
   useEffect(() => {
-    loadServices();
+    // Defer to a microtask so the first setState (setLoading) is not called
+    // synchronously inside the effect body (react-hooks/set-state-in-effect).
+    Promise.resolve().then(() => loadServices());
   }, [loadServices]);
 
   const refresh = () => loadServices();
 
+  // Sub-category dropdown options for the selected category — keyed by the
+  // STABLE sub_category slug (display names can repeat within a category, so
+  // they must never be selection values). Only subs that actually have
+  // services are listed, mirroring the previous service-derived options.
+  const selectedCategoryData = useMemo(
+    () =>
+      categories.find((category) => category.id === filters.category) ?? null,
+    [categories, filters.category],
+  );
   const subCategoryOptions = useMemo(() => {
-    const names = new Set();
-    for (const service of services) {
-      if (filters.category && service.categoryId !== filters.category) continue;
-      if (service.subCategory) names.add(service.subCategory);
-    }
-    return Array.from(names).sort();
-  }, [services, filters.category]);
+    return (selectedCategoryData?.subCategories ?? [])
+      .filter((sub) => (sub.serviceCount ?? 0) > 0)
+      .map((sub) => ({ value: sub.slug ?? sub.id, label: sub.name }));
+  }, [selectedCategoryData]);
+
+  // The selected sub-category (by slug) — carries the numeric dbId the
+  // services reorder endpoint requires.
+  const selectedSubCategoryData = useMemo(
+    () =>
+      selectedCategoryData?.subCategories.find(
+        (sub) => (sub.slug ?? sub.id) === filters.subCategory,
+      ) ?? null,
+    [selectedCategoryData, filters.subCategory],
+  );
 
   // All filters combine (search AND category AND sub-category AND branch AND
   // audience AND status). The "both" branch option matches services available
@@ -98,13 +117,24 @@ export default function AdminServicesPage() {
       ) {
         return false;
       }
-      if (filters.category && service.categoryId !== filters.category) return false;
-      if (filters.subCategory && service.subCategory !== filters.subCategory) return false;
+      if (filters.category && service.categoryId !== filters.category)
+        return false;
+      // Match on the stable slug (see subCategoryOptions above).
+      if (
+        filters.subCategory &&
+        service.subCategorySlug !== filters.subCategory
+      )
+        return false;
 
       if (filters.branch) {
         const branchIds = service.branchIds ?? branchLabelToIds(service.branch);
         if (filters.branch === "both") {
-          if (!(branchIds.includes("indiranagar") && branchIds.includes("sarjapur-road")))
+          if (
+            !(
+              branchIds.includes("indiranagar") &&
+              branchIds.includes("sarjapur-road")
+            )
+          )
             return false;
         } else if (!branchIds.includes(filters.branch)) {
           return false;
@@ -117,10 +147,17 @@ export default function AdminServicesPage() {
     });
   }, [services, filters]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / SERVICES_PAGE_SIZE));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filtered.length / SERVICES_PAGE_SIZE),
+  );
   const safePage = Math.min(page, totalPages);
   const paginated = useMemo(
-    () => filtered.slice((safePage - 1) * SERVICES_PAGE_SIZE, safePage * SERVICES_PAGE_SIZE),
+    () =>
+      filtered.slice(
+        (safePage - 1) * SERVICES_PAGE_SIZE,
+        safePage * SERVICES_PAGE_SIZE,
+      ),
     [filtered, safePage],
   );
 
@@ -157,7 +194,9 @@ export default function AdminServicesPage() {
         current.filter((service) => service.id !== serviceToDelete.id),
       );
     } catch (error) {
-      toast.error(error.message ?? "Unable to delete service. Please try again.");
+      toast.error(
+        error.message ?? "Unable to delete service. Please try again.",
+      );
     } finally {
       setDeleting(false);
       setServiceToDelete(null);
@@ -178,7 +217,9 @@ export default function AdminServicesPage() {
         toast.error("Service not found.");
       }
     } catch (error) {
-      toast.error(error.message ?? "Unable to update service. Please try again.");
+      toast.error(
+        error.message ?? "Unable to update service. Please try again.",
+      );
     } finally {
       setTogglingStatusId(null);
     }
@@ -229,7 +270,10 @@ export default function AdminServicesPage() {
       {/* Search + clear */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative w-full lg:max-w-md">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9DB4B0]" />
+          <Search
+            size={15}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9DB4B0]"
+          />
           <input
             type="search"
             value={filters.search}
@@ -294,8 +338,21 @@ export default function AdminServicesPage() {
             onChange={(e) => setFilter("subCategory", e.target.value)}
             options={subCategoryOptions}
             placeholder="All sub-categories"
+            showChevron
           />
         </div>
+      ) : null}
+
+      {/* Persistent display-order editor — appears once BOTH a category and
+          a sub-category are selected. Lists that scope's services in the
+          persisted order and saves drag-and-drop changes via a single
+          PUT /api/services/reorder request. */}
+      {selectedCategoryData?.dbId != null &&
+      selectedSubCategoryData?.dbId != null ? (
+        <ServiceOrderPanel
+          categoryId={selectedCategoryData.dbId}
+          subCategoryId={selectedSubCategoryData.dbId}
+        />
       ) : null}
 
       {/* Table card */}
@@ -306,7 +363,9 @@ export default function AdminServicesPage() {
           <>
             {paginated.length === 0 ? (
               <div className="px-6 py-14 text-center">
-                <p className="text-sm font-semibold text-[#09221F]">No services found.</p>
+                <p className="text-sm font-semibold text-[#09221F]">
+                  No services found.
+                </p>
                 <p className="mt-1 text-xs text-[#5F7774]">
                   {hasFilters
                     ? "Try adjusting or clearing the filters."

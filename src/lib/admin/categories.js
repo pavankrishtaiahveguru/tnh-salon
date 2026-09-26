@@ -9,6 +9,9 @@ import { clearServicesCache } from "@/lib/services";
 function mapCategoryRow(row) {
   return {
     id: row.slug ?? String(row.id),
+    // Raw numeric categories.id — the services reorder endpoint scopes by
+    // numeric category + sub-category ids (mirrors the sub `dbId` below).
+    dbId: Number(row.id),
     name: row.name,
     description: row.description ?? "",
     icon: row.icon ?? "sparkles",
