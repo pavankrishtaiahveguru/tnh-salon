@@ -92,6 +92,7 @@ export async function createCategory(data) {
       .map((sub) => ({ id: sub?.id, name: sub?.name ?? sub }))
       .filter((sub) => Boolean(sub.name)),
   });
+  clearServicesCache(); // Services page + chatbot reflect the new category immediately
   return extractOne(payload);
 }
 
@@ -106,6 +107,7 @@ export async function updateCategory(id, data) {
       .map((sub) => ({ id: sub?.id, name: sub?.name ?? sub }))
       .filter((sub) => Boolean(sub.name)),
   });
+  clearServicesCache(); // Services page + chatbot reflect the edited category immediately
   return extractOne(payload);
 }
 
@@ -125,6 +127,10 @@ export async function reorderCategory(id, direction) {
       0,
     );
   }
+  // The Services page category strip and the chatbot categories both read
+  // category data through the cached public layer — clear it so the new
+  // order is visible immediately instead of waiting out the 60s TTL.
+  clearServicesCache();
   return payload;
 }
 
@@ -157,6 +163,7 @@ export async function reorderSubCategories(categoryId, items) {
 export async function deleteCategory(id) {
   try {
     await api.delete(`/api/categories/${encodeURIComponent(id)}`);
+    clearServicesCache(); // Services page + chatbot drop the deleted category immediately
     return true;
   } catch (error) {
     if (error?.status === 404) return false;

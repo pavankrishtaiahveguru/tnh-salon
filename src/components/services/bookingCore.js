@@ -218,7 +218,8 @@ export function getBranchWhatsAppNumber(branch) {
 //     the booking modal renders; validateBooking blocks this state before a
 //     message is ever built.
 // Base prices only — GST is never computed here, matching the Services card's
-// "+ 5% GST additional" presentation.
+// "+ tax" presentation. The WhatsApp message instead appends
+// " + taxes additional" (see TAX WORDING NOTE in buildWhatsAppMessage).
 export function formatBookingServiceLine(entry) {
   const service = entry?.service;
   if (!service?.name) return "";
@@ -257,7 +258,16 @@ export function buildWhatsAppMessage({
     "\u{2702}\u{FE0F} Services requested:", // ✂️ scissors + VS16
   ];
   selectedServices.forEach((entry, index) => {
-    lines.push(`       ${index + 1}) ${formatBookingServiceLine(entry)}`);
+    // TAX WORDING NOTE: the WhatsApp wording is "+ taxes additional" (the
+    // on-screen UI says "+ tax"). Appended ONLY to priced lines —
+    // "On Request" has no number to qualify, so it is left bare. No tax is
+    // ever calculated; the displayed price itself is untouched.
+    const priced = selectedPrice(entry) != null;
+    lines.push(
+      `       ${index + 1}) ${formatBookingServiceLine(entry)}${
+        priced ? " + taxes additional" : ""
+      }`,
+    );
   });
   lines.push(
     "",

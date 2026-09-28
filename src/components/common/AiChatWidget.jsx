@@ -22,8 +22,8 @@ import {
   getChatbotBranches,
   getChatbotCategories,
   getChatbotServices,
-  clearChatbotCache,
 } from "@/lib/chatbotService";
+import { refreshChatbotData } from "@/lib/services";
 import {
   TIME_SLOTS,
   areServicesAvailableAtStudio,
@@ -539,9 +539,12 @@ export default function AiChatWidget() {
   }
 
   // Refresh: restart the whole chatbot session (chat log included). Keeps the
-  // chat open; never reloads the browser.
+  // chat open; never reloads the browser. Data refresh goes through the
+  // shared invalidator so the chatbot's categories/services caches (and the
+  // Services page caches, which share admin data) are dropped together —
+  // a refreshed session always refetches from the backend.
   function restartChat() {
-    clearChatbotCache();
+    refreshChatbotData();
     setMessages([]);
     setQuickReplies([]);
     setCollectedData({});
@@ -1350,11 +1353,11 @@ export default function AiChatWidget() {
               </p>
               <p className="mt-1 text-[12px] font-semibold text-[#218F87]">
                 {requiresVariantSelection(service) && !pickVariantId
-                  ? `From ${formatPrice(getBasePrice(service))}`
+                  ? `From ${formatPrice(getBasePrice(service))} + tax`
                   : formatPrice(
                       priceForSelection(service, pickVariantId) ??
                         getBasePrice(service),
-                    )}
+                    ) + " + tax"}
               </p>
             </div>
           </div>
@@ -1692,17 +1695,17 @@ export default function AiChatWidget() {
                       {index + 1}. {entry.service.name}
                       {variant && (
                         <span className="block pl-4 text-[10.5px] text-[#456764]">
-                          Variant: {variant.label} · Price: {formatPrice(price)}
+                          Variant: {variant.label} · Price: {formatPrice(price)} + tax
                         </span>
                       )}
                       {!variant && !exact && (
                         <span className="block pl-4 text-[10.5px] text-[#456764]">
-                          Price: from {formatPrice(price)}
+                          Price: from {formatPrice(price)} + tax
                         </span>
                       )}
                       {!variant && exact && price != null && (
                         <span className="block pl-4 text-[10.5px] text-[#456764]">
-                          Price: {formatPrice(price)}
+                          Price: {formatPrice(price)} + tax
                         </span>
                       )}
                     </li>
@@ -1720,7 +1723,9 @@ export default function AiChatWidget() {
             </p>
             <p className="pt-1 text-[11px] font-semibold text-[#09221F]">
               Estimated total:{" "}
-              {allExact ? formatPrice(total) : `From ${formatPrice(total)}`}
+              {allExact
+                ? `${formatPrice(total)} + tax`
+                : `From ${formatPrice(total)} + tax`}
             </p>
           </div>
         </div>

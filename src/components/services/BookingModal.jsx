@@ -529,11 +529,11 @@ export default function BookingModal({
                 Add another service
               </button>
 
-              {/* Total */}
+              {/* Total — display only: the existing computed total + " + tax" label. No tax math. */}
               <div className="mt-4 flex items-center justify-between border-t border-dashed border-[#D7EAE7] pt-4">
                 <span className="text-sm text-[#718785]">Estimated total</span>
                 <span className="text-lg font-bold text-[#09221F] sm:text-xl">
-                  {allExact ? formatPrice(total) : `From ${formatPrice(total)}`}
+                  {(allExact ? formatPrice(total) : `From ${formatPrice(total)}`) + " + tax"}
                 </span>
               </div>
 

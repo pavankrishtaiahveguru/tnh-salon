@@ -210,10 +210,28 @@ export function prefetchServicesMeta() {
 // Drops every cached/pending Services response. Used by the page's Retry
 // action (so a failed in-flight request cannot be re-joined) and can be
 // called after admin catalogue mutations to surface changes immediately.
+// ALSO drops the chatbot data cache (src/lib/chatbotService.js) — admin
+// service/category mutations must reach the chatbot immediately too, not
+// just the Services page. The import is function-local to break the
+// chatbotService ↔ services module cycle (both files import getCategories).
 export function clearServicesCache() {
   cache.clear();
   inFlight.clear();
   categoriesCache.clear(); // per-branch category lists are admin-mutable too
+  import("@/lib/chatbotService")
+    .then(({ clearChatbotCache }) => clearChatbotCache())
+    .catch(() => {});
+}
+
+// Explicit chatbot refresh hook (requirement 15): invalidates the chatbot's
+// categories, subcategory metadata, services and branch-scoped service caches
+// without touching the Services page's own caches. The chatbot's Refresh
+// action (AiChatWidget restartChat) goes through here instead of calling the
+// internal clearChatbotCache directly.
+export function refreshChatbotData() {
+  return import("@/lib/chatbotService").then(
+    ({ clearChatbotCache }) => clearChatbotCache(),
+  );
 }
 
 // ---- Cached metadata (categories / branches) ------------------------------
