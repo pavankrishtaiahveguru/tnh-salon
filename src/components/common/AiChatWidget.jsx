@@ -22,7 +22,6 @@ import {
   getChatbotBranches,
   getChatbotCategories,
   getChatbotServices,
-  getChatbotSubCategories,
   clearChatbotCache,
 } from "@/lib/chatbotService";
 import {
@@ -38,7 +37,6 @@ import {
   getSelectedVariant,
   getVariants,
   isPriceExact,
-  isServiceAvailableAtStudio,
   openWhatsAppWithMessage,
   priceForSelection,
   requiresVariantSelection,
@@ -71,13 +69,54 @@ function debugLog(label, value) {
 const FALLBACK_ERROR_MESSAGE =
   "Sorry, I couldn't process your request right now. Please try again.";
 
+// Local greeting reply — answered WITHOUT calling the AI agent/Cheerio.
+// The reply mirrors the user's actual greeting instead of always saying "Hi".
+const WELCOME_TAIL = "Welcome to The Nail Hue.\nHow can we help you today?";
+
+// Case-insensitive, punctuation/emoji/whitespace-safe greeting detection.
+// Only STANDALONE greetings match — "Hi, I want to book an appointment" does
+// not, so it keeps flowing through normal intent routing.
+function isGreetingMessage(text) {
+  const normalized = String(text ?? "")
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ") // strip punctuation/emoji (",", "!", "👋", …)
+    .trim()
+    .replace(/\s+/g, " ");
+  return /^(hi+|hey+|hello+|hiya|good (morning|afternoon|evening))$/.test(
+    normalized,
+  );
+}
+
+// Mirrored greeting reply: "Hi" → "Hi! 👋", "Hello" → "Hello! 👋",
+// "Good morning" → "Good morning! ☀️", etc. Returns null for non-greetings.
+// Greeting emojis use ASCII \u{...} escapes for the same reason as the
+// WhatsApp message in bookingCore.js: astral (4-byte UTF-8) literals can be
+// corrupted into U+FFFD by charset-mishandling bundle layers, while ASCII
+// escapes survive byte-exact and produce identical strings at runtime.
+function greetingReplyFor(text) {
+  if (!isGreetingMessage(text)) return null;
+  const normalized = String(text ?? "")
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+  const emoji = normalized.startsWith("good morning")
+    ? "\u{2600}\u{FE0F}" // ☀️ sun
+    : normalized.startsWith("good afternoon")
+      ? "\u{1F324}\u{FE0F}" // 🌤️ sun behind cloud
+      : normalized.startsWith("good evening")
+        ? "\u{1F319}" // 🌙 crescent moon
+        : "\u{1F44B}"; // 👋 waving hand
+  const greeting = normalized
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  return `${greeting}! ${emoji}\n${WELCOME_TAIL}`;
+}
+
 // Chatbot views (navigation-stack entries).
 const VIEWS = {
   WELCOME: "welcome",
-  CATEGORIES: "categories",
-  SUBCATEGORIES: "subcategories",
-  SERVICES: "services",
-  SERVICE_DETAILS: "serviceDetails",
   LOCATIONS: "locations",
   BOOKING_BRANCH: "bookingBranch",
   BOOKING_CATEGORIES: "bookingCategories",
@@ -96,12 +135,9 @@ const VIEWS = {
 // booking modal renders — see bookingCore.TIME_SLOTS).
 const INITIAL_VISIBLE_SLOTS = 6;
 
-// Primary welcome menu — Pricing removed per the assistant spec.
-const WELCOME_ACTIONS = [
-  "Explore Services",
-  "Book an Appointment",
-  "Salon Locations",
-];
+// Primary welcome menu — Explore Services removed per the assistant spec:
+// services are browsed ONLY inside the Book an Appointment flow.
+const WELCOME_ACTIONS = ["Book an Appointment", "Salon Locations"];
 
 let messageIdCounter = 0;
 
@@ -150,21 +186,44 @@ function serviceImage(service) {
 
 // ---------- Chat building blocks ----------
 
-function ChatBubble({ message }) {
+function ChatBubble({ message, actionsDisabled, onAction }) {
   return (
     <div
       className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
     >
-      <div
-        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed ${
-          message.role === "user"
-            ? "rounded-br-md bg-[#27A399] text-white"
-            : message.isError
-              ? "rounded-bl-md bg-[#FBEAEA] text-[#8A3A3A]"
-              : "rounded-bl-md bg-[#F1F8F6] text-[#163B38]"
-        }`}
-      >
-        {message.content}
+      <div className="max-w-[80%] space-y-2">
+        <div
+          className={`rounded-2xl px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-line ${
+            message.role === "user"
+              ? "rounded-br-md bg-[#27A399] text-white"
+              : message.isError
+                ? "rounded-bl-md bg-[#FBEAEA] text-[#8A3A3A]"
+                : "rounded-bl-md bg-[#F1F8F6] text-[#163B38]"
+          }`}
+        >
+          {message.content}
+        </div>
+        {message.actions?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {message.actions.map((label) => (
+              <button
+                key={label}
+                type="button"
+                disabled={actionsDisabled || message.actionsUsed}
+                onClick={() =>
+                  !(actionsDisabled || message.actionsUsed) && onAction?.(label)
+                }
+                className={pillClasses(
+                  actionsDisabled || message.actionsUsed
+                    ? "cursor-not-allowed border-[#E5ECEA] bg-[#F3F6F5] text-[#9AA9A6] hover:border-[#E5ECEA] hover:bg-[#F3F6F5]"
+                    : "",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -196,9 +255,8 @@ function InlineError({ children }) {
   );
 }
 
-function WelcomePanel({ onExplore, onBook, onLocations }) {
+function WelcomePanel({ onBook, onLocations, disabled }) {
   const actions = [
-    { label: "Explore Services", handler: onExplore },
     { label: "Book an Appointment", handler: onBook },
     { label: "Salon Locations", handler: onLocations },
   ];
@@ -229,8 +287,13 @@ function WelcomePanel({ onExplore, onBook, onLocations }) {
           <button
             key={action.label}
             type="button"
-            onClick={action.handler}
-            className={pillClasses()}
+            disabled={disabled}
+            onClick={() => !disabled && action.handler()}
+            className={pillClasses(
+              disabled
+                ? "cursor-not-allowed border-[#E5ECEA] bg-[#F3F6F5] text-[#9AA9A6] hover:border-[#E5ECEA] hover:bg-[#F3F6F5]"
+                : "",
+            )}
           >
             {action.label}
           </button>
@@ -336,9 +399,15 @@ export default function AiChatWidget() {
   // Chat log + AI (free-form questions via TNH backend → Cheerio).
   const [messages, setMessages] = useState([]);
   const [quickReplies, setQuickReplies] = useState([]);
+  // Scoped ONLY to the welcome action group (both the WelcomePanel buttons
+  // and the actions attached to the greeting message): once Book an
+  // Appointment or Salon Locations has been tapped, that group is disabled so
+  // neither flow can be triggered twice. Every other button in the chatbot —
+  // categories, services, variants, Continue, etc. — stays fully interactive.
   const [collectedData, setCollectedData] = useState({});
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [welcomeActionsUsed, setWelcomeActionsUsed] = useState(false);
 
   // Navigation stack (chatbot-internal; never browser history).
   const [view, setView] = useState(VIEWS.WELCOME);
@@ -348,15 +417,9 @@ export default function AiChatWidget() {
   const [loadingText, setLoadingText] = useState("");
   const [viewError, setViewError] = useState("");
 
-  // Explore state.
-  const [categories, setCategories] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [subCategories, setSubCategories] = useState(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-  const [services, setServices] = useState(null);
+  // Shared service-selection state (used by the booking flow's service pick
+  // view). The standalone Explore Services state was removed with that flow.
   const [selectedService, setSelectedService] = useState(null);
-  const [detailVariantId, setDetailVariantId] = useState(null);
-  const [detailError, setDetailError] = useState("");
 
   // Booking state — field names match the existing booking system
   // (BookingModal / bookingCore.validateBooking).
@@ -429,7 +492,6 @@ export default function AiChatWidget() {
     setNavigationStack((prev) => prev.slice(0, -1));
     setView(previous);
     setViewError("");
-    setDetailError("");
     setPickError("");
   }
 
@@ -440,13 +502,11 @@ export default function AiChatWidget() {
     setView(VIEWS.WELCOME);
     setViewError("");
     setLoadingText("");
-    setSelectedCategory(null);
-    setSubCategories(null);
-    setSelectedSubCategory(null);
-    setServices(null);
+    // A deliberate Home/Restart is a fresh start — the welcome action group
+    // becomes interactive again (the chat log's older action rows stay
+    // permanently disabled via their own message state).
+    setWelcomeActionsUsed(false);
     setSelectedService(null);
-    setDetailVariantId(null);
-    setDetailError("");
     setBookingEntries([]);
     setSelectedStudio(null);
     setBookingDate("");
@@ -460,6 +520,22 @@ export default function AiChatWidget() {
     setBookingServiceList(null);
     setPickVariantId(null);
     setPickError("");
+    // When the log already has messages, add ONE welcome message carrying the
+    // two welcome actions — rendered by the same single action renderer as
+    // every other action group. (An empty log shows the WelcomePanel instead.)
+    setMessages((prev) =>
+      prev.length === 0
+        ? prev
+        : [
+            ...prev,
+            {
+              id: nextMessageId(),
+              role: "assistant",
+              content: WELCOME_TAIL,
+              actions: WELCOME_ACTIONS,
+            },
+          ],
+    );
   }
 
   // Refresh: restart the whole chatbot session (chat log included). Keeps the
@@ -474,66 +550,6 @@ export default function AiChatWidget() {
   }
 
   // ---------- Data loaders (existing TNH APIs, session-cached) ----------
-
-  async function ensureCategories() {
-    if (categories) return categories;
-    const fetchId = ++fetchIdRef.current;
-    setLoadingText("Loading categories...");
-    setViewError("");
-    try {
-      const data = await getChatbotCategories();
-      if (fetchIdRef.current !== fetchId) return null;
-      setCategories(data);
-      return data;
-    } catch (error) {
-      if (fetchIdRef.current !== fetchId) return null;
-      setViewError(
-        "Sorry, we couldn't load our services right now. Please try again.",
-      );
-      return null;
-    } finally {
-      if (fetchIdRef.current === fetchId) setLoadingText("");
-    }
-  }
-
-  async function loadSubCategories(category) {
-    const fetchId = ++fetchIdRef.current;
-    setLoadingText("Loading categories...");
-    setViewError("");
-    try {
-      const subs = await getChatbotSubCategories(null, category.id);
-      if (fetchIdRef.current !== fetchId) return;
-      setSubCategories(subs);
-    } catch (error) {
-      if (fetchIdRef.current !== fetchId) return;
-      setViewError(
-        "Sorry, we couldn't load our services right now. Please try again.",
-      );
-    } finally {
-      if (fetchIdRef.current === fetchId) setLoadingText("");
-    }
-  }
-
-  async function loadExploreServices(category, sub) {
-    const fetchId = ++fetchIdRef.current;
-    setLoadingText("Loading services...");
-    setViewError("");
-    try {
-      const rows = await getChatbotServices({
-        category: category.id,
-        subCategory: sub.slug,
-      });
-      if (fetchIdRef.current !== fetchId) return;
-      setServices(rows);
-    } catch (error) {
-      if (fetchIdRef.current !== fetchId) return;
-      setViewError(
-        "Sorry, we couldn't load our services right now. Please try again.",
-      );
-    } finally {
-      if (fetchIdRef.current === fetchId) setLoadingText("");
-    }
-  }
 
   async function ensureBranches() {
     if (branches) return branches;
@@ -613,60 +629,26 @@ export default function AiChatWidget() {
     }
   }
 
-  // ---------- Explore flow handlers ----------
+  // ---------- Welcome actions + shared service selection ----------
 
-  // `userText` is the customer's utterance for the chat log; null when the
-  // typed text was already appended by the caller (free-text intents).
-  async function beginExplore(userText = "Explore Services") {
-    if (userText) {
-      pushExchange(userText, "Here are our service categories:");
-    } else {
-      pushAssistant("Here are our service categories:");
-    }
-    navigateTo(VIEWS.CATEGORIES);
-    await ensureCategories();
-  }
-
-  function startExplore() {
-    return beginExplore();
-  }
-
-  // Dispatches the three primary welcome actions (chat log included).
+  // Dispatches the two primary welcome actions (chat log included). The
+  // welcome action group is disabled IMMEDIATELY (before the flow starts) so
+  // rapid double-clicks can never fire the handler twice.
   function handleWelcomeAction(label) {
-    if (label === "Explore Services") return startExplore();
+    if (welcomeActionsUsed) return;
+    setWelcomeActionsUsed(true);
+    // Permanently stamp every existing action group in the chat log as used,
+    // so old greeting buttons stay dead even after a later Home/Restart.
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.actions?.length && !message.actionsUsed
+          ? { ...message, actionsUsed: true }
+          : message,
+      ),
+    );
     if (label === "Book an Appointment") return startBooking();
     if (label === "Salon Locations") return startLocations();
     return sendMessage(label);
-  }
-
-  async function selectCategory(category) {
-    setSelectedCategory(category);
-    setSelectedSubCategory(null);
-    setServices(null);
-    pushExchange(
-      category.name,
-      `Here are the subcategories under ${category.name}:`,
-    );
-    navigateTo(VIEWS.SUBCATEGORIES);
-    await loadSubCategories(category);
-  }
-
-  async function selectSubCategory(sub) {
-    setSelectedSubCategory(sub);
-    setServices(null);
-    pushExchange(sub.name, "Here are the available services:");
-    navigateTo(VIEWS.SERVICES);
-    await loadExploreServices(selectedCategory, sub);
-  }
-
-  function openServiceDetails(service) {
-    setSelectedService(service);
-    setDetailVariantId(
-      getVariants(service).length === 1 ? getVariants(service)[0].id : null,
-    );
-    setDetailError("");
-    pushExchange(service.name, null);
-    navigateTo(VIEWS.SERVICE_DETAILS);
   }
 
   // Adds a service (entry shape identical to the booking modal's) to the
@@ -694,65 +676,6 @@ export default function AiChatWidget() {
     return true;
   }
 
-  function handleBookFromList(service) {
-    const variants = getVariants(service);
-    if (variants.length > 1) {
-      // Multiple options — the details view lets the customer pick one first.
-      openServiceDetails(service);
-      return;
-    }
-    if (!addServiceToBooking(service)) return;
-    pushExchange(`Book ${service.name}`, "Great choice! Which salon works for you?");
-    navigateTo(VIEWS.BOOKING_BRANCH);
-    ensureBranches();
-  }
-
-  function handleDetailBook() {
-    const service = selectedService;
-    if (requiresVariantSelection(service) && !detailVariantId) {
-      setDetailError("Pick an option above.");
-      return;
-    }
-    if (!addServiceToBooking(service, detailVariantId)) {
-      setDetailError("Pick an option above.");
-      return;
-    }
-    pushExchange(
-      `Book ${service.name}`,
-      "Great choice! Which salon works for you?",
-    );
-    navigateTo(VIEWS.BOOKING_BRANCH);
-    ensureBranches();
-  }
-
-  function handleDetailAddMore() {
-    const service = selectedService;
-    if (requiresVariantSelection(service) && !detailVariantId) {
-      setDetailError("Pick an option above.");
-      return;
-    }
-    if (!addServiceToBooking(service, detailVariantId)) {
-      setDetailError("Pick an option above.");
-      return;
-    }
-    pushAssistant(
-      `${service.name} added. Pick another service or continue to booking.`,
-    );
-    // Back to the service list to keep browsing (stack pop → services).
-    goBack();
-  }
-
-  function handleContinueFromServices() {
-    if (bookingEntries.length === 0) return;
-    pushExchange("Continue booking", null);
-    if (selectedStudio) {
-      navigateTo(VIEWS.BOOKING_SERVICES);
-    } else {
-      navigateTo(VIEWS.BOOKING_BRANCH);
-      ensureBranches();
-    }
-  }
-
   // ---------- Booking flow handlers ----------
 
   // STEP 1 — branch selected: it becomes the scope for every following
@@ -771,8 +694,8 @@ export default function AiChatWidget() {
     setSelectedStudio(branch.id);
     pushExchange(branch.name, null);
     if (bookingEntries.length > 0) {
-      // Services already chosen (e.g. added via Explore before the branch, or
-      // an in-progress booking) — show the summary, never an empty browser.
+      // Services already chosen (e.g. an in-progress booking being resumed) —
+      // show the summary, never an empty browser.
       navigateTo(VIEWS.BOOKING_SERVICES);
     } else {
       // Deterministic hierarchy: branch → categories.
@@ -1022,10 +945,15 @@ export default function AiChatWidget() {
   // ---------- Free-text input (keyword routing + optional AI) ----------
 
   function routeIntent(text) {
+    // A standalone greeting is answered locally before any intent routing —
+    // it must never reach the AI provider just to say hello.
+    if (isGreetingMessage(text)) return "greeting";
     const t = text.toLowerCase();
     if (/(book|appointment)/.test(t)) return "book";
     if (/(location|branch|address|where)/.test(t)) return "locations";
-    if (/(service|menu|explore|categor)/.test(t)) return "explore";
+    // Explore Services was removed — service queries route into the booking
+    // flow, the only place services can be browsed.
+    if (/(service|menu|explore|categor)/.test(t)) return "book";
     return null;
   }
 
@@ -1068,9 +996,23 @@ export default function AiChatWidget() {
       pushMessages([{ id: nextMessageId(), role: "user", content: text }]);
       setInputValue("");
       setQuickReplies([]);
+      // Greeting: reply locally, mirroring the user's greeting, with the two
+      // welcome actions attached to THIS message. Never calls Cheerio, never
+      // touches booking state. This message's action row is the ONLY action
+      // group rendered — there is no separate global welcome-action row.
+      if (intent === "greeting") {
+        pushMessages([
+          {
+            id: nextMessageId(),
+            role: "assistant",
+            content: greetingReplyFor(text),
+            actions: WELCOME_ACTIONS,
+          },
+        ]);
+        return;
+      }
       // The user message is already in the log — pass null so the flow does
       // not append it a second time.
-      if (intent === "explore") await beginExplore(null);
       if (intent === "book") beginBooking(null);
       if (intent === "locations") await beginLocations(null);
       return;
@@ -1113,7 +1055,16 @@ export default function AiChatWidget() {
           ];
 
       pushMessages(assistantMessages);
-      setQuickReplies(result.quickReplies);
+      // Never surface a quick reply that would launch the removed standalone
+      // Explore Services flow — service browsing lives in booking only.
+      setQuickReplies(
+        result.quickReplies.filter(
+          (reply) =>
+            !/explore\s*services|browse\s*services|view\s*services/i.test(
+              reply,
+            ),
+        ),
+      );
       setCollectedData((prev) => ({ ...prev, ...result.collectedData }));
     } catch (error) {
       const message =
@@ -1132,233 +1083,6 @@ export default function AiChatWidget() {
   }
 
   // ---------- View panels ----------
-
-  function renderCategoriesPanel() {
-    if (loadingText) return null;
-    if (viewError) {
-      return (
-        <div className="space-y-2 text-center">
-          <InlineError>{viewError}</InlineError>
-          <button type="button" onClick={() => startExplore()} className={pillClasses()}>
-            Try Again
-          </button>
-        </div>
-      );
-    }
-    if (!categories) return null;
-
-    return (
-      <div className="flex flex-wrap gap-2">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            type="button"
-            onClick={() => selectCategory(category)}
-            className={pillClasses()}
-          >
-            {category.name}
-            {category.serviceCount ? ` · ${category.serviceCount}` : ""}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  function renderSubCategoriesPanel() {
-    if (loadingText) return null;
-    if (viewError) {
-      return (
-        <div className="space-y-2 text-center">
-          <InlineError>{viewError}</InlineError>
-          <button
-            type="button"
-            onClick={() => selectedCategory && selectCategory(selectedCategory)}
-            className={pillClasses()}
-          >
-            Try Again
-          </button>
-        </div>
-      );
-    }
-    if (!subCategories) return null;
-    if (subCategories.length === 0) {
-      return (
-        <p className="rounded-xl border border-dashed border-[#D7EAE7] px-3 py-4 text-center text-[11px] text-[#718785]">
-          No subcategories available under {selectedCategory?.name} right now.
-        </p>
-      );
-    }
-
-    return (
-      <div className="flex flex-wrap gap-2">
-        {subCategories.map((sub) => (
-          <button
-            key={sub.slug}
-            type="button"
-            onClick={() => selectSubCategory(sub)}
-            className={pillClasses()}
-          >
-            {sub.name}
-            {sub.serviceCount ? ` · ${sub.serviceCount}` : ""}
-          </button>
-        ))}
-      </div>
-    );
-  }
-
-  function renderServicesPanel() {
-    if (loadingText) return null;
-    if (viewError) {
-      return (
-        <div className="space-y-2 text-center">
-          <InlineError>{viewError}</InlineError>
-          <button
-            type="button"
-            onClick={() =>
-              selectedCategory &&
-              selectedSubCategory &&
-              loadExploreServices(selectedCategory, selectedSubCategory)
-            }
-            className={pillClasses()}
-          >
-            Try Again
-          </button>
-        </div>
-      );
-    }
-    if (!services) return null;
-
-    return (
-      <div className="space-y-2.5">
-        {bookingEntries.length > 0 && (
-          <div className="rounded-xl border border-[#BFE3DE] bg-[#F1FAF8] px-3 py-2.5">
-            <SectionLabel>Selected services</SectionLabel>
-            <ol className="space-y-0.5 text-[11px] font-medium text-[#285F5A]">
-              {bookingEntries.map((entry, index) => (
-                <li key={entry.service.id}>
-                  {index + 1}. {formatBookingServiceLine(entry)}
-                </li>
-              ))}
-            </ol>
-            <button
-              type="button"
-              onClick={handleContinueFromServices}
-              className={`mt-2 w-full ${primaryButtonClasses("py-2 text-[11px]")}`}
-            >
-              Continue
-            </button>
-          </div>
-        )}
-
-        {services.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#D7EAE7] px-3 py-4 text-center text-[11px] text-[#718785]">
-            No services available here right now.
-          </p>
-        ) : (
-          services.map((service) => (
-            <ServiceMiniCard
-              key={service.id}
-              service={service}
-              onView={() => openServiceDetails(service)}
-              onBook={() => handleBookFromList(service)}
-            />
-          ))
-        )}
-      </div>
-    );
-  }
-
-  function renderServiceDetailsPanel() {
-    const service = selectedService;
-    if (!service) return null;
-    const variants = getVariants(service);
-
-    return (
-      <div className="space-y-3">
-        <div className="rounded-xl border border-[#DCEBE8] bg-[#F8FCFB] p-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#E4F5F2]">
-              {serviceImage(service)}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-[#09221F]">{service.name}</p>
-              <p className="mt-0.5 text-[10px] text-[#718785]">
-                {service.category || "Beauty Service"} ·{" "}
-                {service.gender || "Unisex"}
-                {service.duration ? ` · ${service.duration}` : ""}
-              </p>
-              <p className="mt-1 text-[12px] font-semibold text-[#218F87]">
-                {requiresVariantSelection(service) && !detailVariantId
-                  ? `From ${formatPrice(getBasePrice(service))}`
-                  : formatPrice(
-                      priceForSelection(service, detailVariantId) ??
-                        getBasePrice(service),
-                    )}
-              </p>
-            </div>
-          </div>
-
-          {variants.length > 1 && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {variants.map((variant) => {
-                const selected = detailVariantId === variant.id;
-                return (
-                  <button
-                    key={variant.id}
-                    type="button"
-                    onClick={() => {
-                      setDetailVariantId(variant.id);
-                      setDetailError("");
-                    }}
-                    className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold transition ${
-                      selected
-                        ? "border-[#28B8B0] bg-[#28B8B0] text-white"
-                        : "border-[#DCEAE8] bg-white text-[#456764] hover:border-[#28B8B0]"
-                    }`}
-                  >
-                    {variant.label} · {formatPrice(variant.price)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {detailError && <InlineError>{detailError}</InlineError>}
-
-          {service.description && (
-            <p className="mt-2.5 text-[11px] leading-relaxed text-[#456764]">
-              {service.description}
-            </p>
-          )}
-
-          {branches && (
-            <p className="mt-2 text-[10px] text-[#718785]">
-              Available at:{" "}
-              {branches
-                .filter((branch) => isServiceAvailableAtStudio(service, branch))
-                .map((branch) => branch.name)
-                .join(", ") || "—"}
-            </p>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleDetailBook}
-          className={primaryButtonClasses()}
-        >
-          Book This Service
-        </button>
-        <button
-          type="button"
-          onClick={handleDetailAddMore}
-          className={secondaryButtonClasses()}
-        >
-          Add More Service
-        </button>
-      </div>
-    );
-  }
 
   function renderLocationsPanel() {
     if (loadingText) return null;
@@ -1660,7 +1384,12 @@ export default function AiChatWidget() {
             </div>
           )}
 
-          {pickError && <InlineError>{pickError}</InlineError>}
+          {/* Hint shows up-front for multi-variant services (a disabled
+              Continue cannot set it on click) and after a blocked attempt. */}
+          {(pickError ||
+            (requiresVariantSelection(service) && !pickVariantId)) && (
+            <InlineError>Pick an option above.</InlineError>
+          )}
 
           {service.description && (
             <p className="mt-2.5 text-[11px] leading-relaxed text-[#456764]">
@@ -1669,12 +1398,19 @@ export default function AiChatWidget() {
           )}
         </div>
 
+        {/* STEP 6 — variant is REQUIRED before Continue: disabled (with the
+            "Pick an option above." hint) until pickVariantId is set. */}
         <button
           type="button"
           onClick={handleBookingPickConfirm}
-          className={primaryButtonClasses()}
+          disabled={requiresVariantSelection(service) && !pickVariantId}
+          className={primaryButtonClasses(
+            requiresVariantSelection(service) && !pickVariantId
+              ? "cursor-not-allowed bg-[#B9D8D4] hover:bg-[#B9D8D4]"
+              : "",
+          )}
         >
-          Add Service
+          Continue
         </button>
       </div>
     );
@@ -1770,13 +1506,13 @@ export default function AiChatWidget() {
         </button>
 
         {bookingEntries.length > 0 && (
-          <button
-            type="button"
-            onClick={handleBookingBrowseContinue}
-            className={primaryButtonClasses()}
-          >
-            Continue
-          </button>
+        <button
+          type="button"
+          onClick={handleBookingBrowseContinue}
+          className={primaryButtonClasses()}
+        >
+          Continue to Booking
+        </button>
         )}
       </div>
     );
@@ -2040,14 +1776,6 @@ export default function AiChatWidget() {
 
   function renderViewPanel() {
     switch (view) {
-      case VIEWS.CATEGORIES:
-        return renderCategoriesPanel();
-      case VIEWS.SUBCATEGORIES:
-        return renderSubCategoriesPanel();
-      case VIEWS.SERVICES:
-        return renderServicesPanel();
-      case VIEWS.SERVICE_DETAILS:
-        return renderServiceDetailsPanel();
       case VIEWS.LOCATIONS:
         return renderLocationsPanel();
       case VIEWS.BOOKING_BRANCH:
@@ -2262,32 +1990,30 @@ export default function AiChatWidget() {
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 py-4">
               {messages.length === 0 && view === VIEWS.WELCOME && !loadingText ? (
                 <WelcomePanel
-                  onExplore={startExplore}
                   onBook={startBooking}
                   onLocations={startLocations}
+                  disabled={welcomeActionsUsed}
                 />
               ) : (
                 <div className="space-y-3">
                   {messages.map((message) => (
-                    <ChatBubble key={message.id} message={message} />
+                    <ChatBubble
+                      key={message.id}
+                      message={message}
+                      actionsDisabled={welcomeActionsUsed}
+                      onAction={handleWelcomeAction}
+                    />
                   ))}
 
                   {(isSending || loadingText) && <TypingIndicator />}
 
-                  {!isSending && !loadingText && view === VIEWS.WELCOME && (
-                    <div className="flex flex-wrap justify-center gap-2 pt-1">
-                      {WELCOME_ACTIONS.map((label) => (
-                        <button
-                          key={label}
-                          type="button"
-                          onClick={() => handleWelcomeAction(label)}
-                          className={pillClasses()}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* NOTE: there is intentionally NO global welcome-action row
+                      here. The Book an Appointment / Salon Locations buttons
+                      render in exactly ONE place — the action row of the
+                      assistant message that carries them (initial WelcomePanel
+                      for an empty log, greeting reply, or the post-Home
+                      welcome message). A second global row would duplicate
+                      the buttons after every greeting. */}
 
                   {!isSending &&
                     !loadingText &&

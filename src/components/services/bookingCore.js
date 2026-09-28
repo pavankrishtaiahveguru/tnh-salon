@@ -240,21 +240,29 @@ export function buildWhatsAppMessage({
   date,
   selectedTime,
 }) {
+  // EMOJI ENCODING NOTE: the emoji labels below are written as ASCII
+  // `\u{...}` escapes, NOT literal emoji characters. Reason: if any layer
+  // between this file and the browser (build/CDN/proxy serving the JS bundle)
+  // mishandles 4-byte UTF-8 (astral) sequences, literal emojis corrupt into
+  // U+FFFD ("�") — and encodeURIComponent then faithfully encodes the ALREADY
+  // broken string, producing "� Branch:" in WhatsApp. ASCII escapes survive
+  // any charset layer; at runtime the string is byte-identical to the emoji.
+  // Do not "simplify" these back to literal emojis.
   const lines = [
     "Hi! I'd like to book an appointment at The Nail Hue",
     "",
-    `📍 Branch: ${studioName ?? ""}`,
-    `📅 Date: ${formatDateDisplay(date)}`,
-    `🕐 Preferred time: ${selectedTime ?? ""}`,
-    "✂️ Services requested:",
+    `\u{1F4CD} Branch: ${studioName ?? ""}`, // 📍 pushpin
+    `\u{1F4C5} Date: ${formatDateDisplay(date)}`, // 📅 calendar
+    `\u{1F550} Preferred time: ${selectedTime ?? ""}`, // 🕐 clock
+    "\u{2702}\u{FE0F} Services requested:", // ✂️ scissors + VS16
   ];
   selectedServices.forEach((entry, index) => {
     lines.push(`       ${index + 1}) ${formatBookingServiceLine(entry)}`);
   });
   lines.push(
     "",
-    `👤 Name: ${customerName ?? ""}`,
-    `📱 Phone: ${phone ?? ""}`,
+    `\u{1F464} Name: ${customerName ?? ""}`, // 👤 bust
+    `\u{1F4F1} Phone: ${phone ?? ""}`, // 📱 mobile phone
     "",
     "Please confirm my booking. Thank you!",
   );

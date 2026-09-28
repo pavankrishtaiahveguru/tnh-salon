@@ -145,7 +145,7 @@ function ServiceCard({ service, onBook }) {
             {startingPrice != null ? (
               /*
                * Responsive price row:
-               * - Mobile: very small GST text so it fits inside 2-column cards.
+               * - Mobile: very small tax text so it fits inside 2-column cards.
                * - sm: slightly larger.
                * - lg: normal desktop size.
                * - flex-wrap prevents overflow on narrow cards.
@@ -156,7 +156,7 @@ function ServiceCard({ service, onBook }) {
                 </span>
 
                 <span className="min-w-0 max-w-full break-words text-[7px] font-medium leading-tight text-[#09221F] sm:text-[11px] sm:leading-normal lg:text-[12px]">
-                  + 5% GST additional
+                  + tax
                 </span>
               </div>
             ) : (
@@ -166,7 +166,7 @@ function ServiceCard({ service, onBook }) {
                 </span>
 
                 <span className="min-w-0 max-w-full break-words text-[7px] font-medium leading-tight text-[#09221F] sm:text-[11px] sm:leading-normal lg:text-[12px]">
-                  + 5% GST additional
+                  + tax
                 </span>
               </div>
             )}
@@ -366,7 +366,7 @@ function ServiceCard({ service, onBook }) {
                     </span>
 
                     <span className="text-[10px] font-medium text-[#09221F] sm:text-xs">
-                      + 5% GST additional
+                      + tax
                     </span>
                   </div>
                 ) : (
@@ -376,7 +376,7 @@ function ServiceCard({ service, onBook }) {
                     </span>
 
                     <span className="text-[10px] font-medium text-[#09221F] sm:text-xs">
-                      + 5% GST additional
+                      + tax
                     </span>
                   </div>
                 )}
