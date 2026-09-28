@@ -295,12 +295,8 @@ function ServicesContent() {
 
     // Metadata + booking catalogue resolve independently so a failure in one
     // doesn't blank the page. Cached (60s) after the first visit.
-    getCategoriesCached()
-      .then((data) => {
-        if (requestIdRef.current === requestId) setCategories(data);
-      })
-      .catch(() => {});
-
+    // (Categories are fetched in the branch-scoped effect above so the
+    // category strip always matches the selected branch.)
     getBranchesCached()
       .then((data) => {
         if (requestIdRef.current === requestId) setBranches(data);
@@ -326,6 +322,11 @@ function ServicesContent() {
     // retry action — so every request carries the SAME filters.
     const filters = {
       limit: SERVICES_PAGE_SIZE,
+      // Public catalog shows ACTIVE services only — matches the hero stat
+      // (/api/services/count), the prefetch default in lib/services.js, and
+      // the booking catalogue. Without this the backend returns Inactive
+      // services too, so admin deactivations were never reflected here.
+      status: "Active",
       search,
       category: selectedCategory !== "all" ? selectedCategory : undefined,
       subCategory:
@@ -382,6 +383,63 @@ function ServicesContent() {
     selectedGender,
     sortBy,
     retryCount,
+  ]);
+
+  // ---- Branch-scoped category metadata ------------------------------
+  // The category strip (and subcategory chips) must reflect the selected
+  // branch: GET /api/categories?branch=<slug> returns per-branch ACTIVE
+  // service counts (services + service_branches), so categories with no
+  // service at that branch disappear and "All Services" + counts stay
+  // truthful. Branch-independent metadata (branches list, booking catalogue,
+  // hero count) still loads once, exactly as before. The unscoped "all" list
+  // stays cached across branch switches; each branch gets its own entry.
+  useEffect(() => {
+    let cancelled = false;
+    getCategoriesCached(selectedBranch === "all" ? "all" : selectedBranch)
+      .then((data) => {
+        if (!cancelled) setCategories(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedBranch, retryCount]);
+
+  // ---- Stale-selection reset on branch change -----------------------
+  // If a deep link or branch switch leaves a selected category/subcategory
+  // that has no services at the selected branch, clear it (category → all;
+  // subcategory → all). Runs only after the branch-scoped list resolves, so
+  // it never fights the initial "All Services" render. Skip while the
+  // relevant metadata is still loading.
+  useEffect(() => {
+    if (selectedCategory === "all" || categories.length === 0) return;
+    const exists = categories.some((category) => category.id === selectedCategory);
+    if (!exists) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("category");
+      params.delete("subCategory");
+      const query = params.toString();
+      router.push(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+      return;
+    }
+    if (selectedSubCategory === "all") return;
+    const subExists = (selectedCategoryData?.subCategories ?? []).some(
+      (sub) => sub.name === selectedSubCategory,
+    );
+    if (!subExists) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("subCategory");
+      const query = params.toString();
+      router.push(`${pathname}?${query}`, { scroll: false });
+    }
+  }, [
+    categories,
+    selectedCategory,
+    selectedSubCategory,
+    selectedCategoryData,
+    searchParams,
+    pathname,
+    router,
   ]);
 
   const updateParams = (updates) => {

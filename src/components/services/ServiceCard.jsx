@@ -5,12 +5,10 @@ import Image from "next/image";
 import { Clock, UserRound, Plus, X } from "lucide-react";
 import BookingModal from "./BookingModal";
 
-// Card grid images are ~48–64px tiles served from Cloudinary. Fixed
-// responsive sizes prevent the browser from downloading oversized originals
-// (Phase 16). Detail-modal imagery reuses the same underlying file with a
-// larger slot, so it keeps fill + a bigger sizes value.
+// Card grid images are ~48–64px tiles served from Cloudinary.
 const CARD_IMAGE_SIZES =
   "(max-width: 640px) 48px, (max-width: 768px) 64px, 64px";
+
 const MODAL_IMAGE_SIZES = "152px";
 
 function ServiceCard({ service, onBook }) {
@@ -54,9 +52,6 @@ function ServiceCard({ service, onBook }) {
     };
   }, [showDetails]);
 
-  // Stable identity for the parent grid's onBook prop (Phase 15): keeps the
-  // memo comparison meaningful when the Services page re-renders for
-  // pagination/fetch state changes.
   const handleBookClick = useCallback(() => {
     if (onBook) {
       onBook(service);
@@ -67,6 +62,7 @@ function ServiceCard({ service, onBook }) {
 
   const handleDetailsBook = useCallback(() => {
     setShowDetails(false);
+
     if (onBook) {
       onBook(service);
     } else {
@@ -113,16 +109,14 @@ function ServiceCard({ service, onBook }) {
             </div>
           </div>
 
-          {/* Description — capped at 2 lines on every breakpoint (Part 3);
-              the full text stays available in View Details and the booking
-              flow. Only the display is clamped — stored data is untouched. */}
+          {/* Description */}
           {service.description && (
             <p className="mt-2 line-clamp-2 text-[10px] leading-[1.45] text-[#718785] sm:mt-3 sm:text-xs">
               {service.description}
             </p>
           )}
 
-          {/* Meta — compact on mobile so both values stay above the price. */}
+          {/* Meta */}
           <div className="mt-2 flex min-w-0 flex-nowrap gap-1 overflow-hidden sm:mt-3 sm:gap-1.5">
             {service.gender && (
               <span className="flex min-w-0 shrink items-center gap-0.5 rounded-lg bg-[#EAF5F3] px-1.5 py-1 text-[9px] font-medium text-[#285F5A] sm:gap-1 sm:px-2.5 sm:py-1.5 sm:text-[10px]">
@@ -143,30 +137,42 @@ function ServiceCard({ service, onBook }) {
           <div className="my-2 border-t border-dashed border-[#D7EAE7] sm:my-3" />
 
           {/* Price */}
-          <div>
+          <div className="min-w-0">
             <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-[#7A8D8A]">
               {hasVariants ? "From" : "Price"}
             </p>
 
             {startingPrice != null ? (
-              <p className="mt-0.5 text-base font-bold leading-none text-[#09221F] sm:text-xl">
-                ₹{startingPrice}
-              </p>
+              /*
+               * Responsive price row:
+               * - Mobile: very small GST text so it fits inside 2-column cards.
+               * - sm: slightly larger.
+               * - lg: normal desktop size.
+               * - flex-wrap prevents overflow on narrow cards.
+               */
+              <div className="mt-0.5 flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5 text-[#09221F]">
+                <span className="shrink-0 text-base font-bold leading-none sm:text-xl">
+                  ₹{startingPrice}
+                </span>
+
+                <span className="min-w-0 max-w-full break-words text-[7px] font-medium leading-tight text-[#09221F] sm:text-[11px] sm:leading-normal lg:text-[12px]">
+                  + 5% GST additional
+                </span>
+              </div>
             ) : (
-              <p className="mt-1 text-xs font-semibold text-[#218F87]">
-                Price on request
-              </p>
+              <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5">
+                <span className="text-xs font-semibold leading-tight text-[#218F87]">
+                  Price on request
+                </span>
+
+                <span className="min-w-0 max-w-full break-words text-[7px] font-medium leading-tight text-[#09221F] sm:text-[11px] sm:leading-normal lg:text-[12px]">
+                  + 5% GST additional
+                </span>
+              </div>
             )}
           </div>
 
-          {/* Variants — EVERY variant returned by the backend is rendered
-              (Parts 4 + 31): S/M/L shows all three, S/M shows two, one shows
-              one. auto-cols-fr + grid-flow-col gives each variant an equal
-              fraction of the card width so all variants ALWAYS sit in a
-              single row — even 3-up inside the narrow 2-per-row mobile cards
-              (a 375px viewport leaves ~139px per card; each box gets ~43px).
-              Nothing is hidden, wrapped, or scrollable; prices/labels just
-              truncate instead of ever forcing a second row. */}
+          {/* Variants */}
           {hasVariants && (
             <div className="mt-2 grid auto-cols-fr grid-flow-col gap-1.5 sm:mt-3 sm:gap-2">
               {variants.map((variant, index) => (
@@ -192,7 +198,7 @@ function ServiceCard({ service, onBook }) {
             <button
               type="button"
               onClick={openDetails}
-              className="flex-1 rounded-lg bg-[#d4fffa] border border-[#25ffe6] px-1.5 py-1.5 text-[9px] font-bold text-[#09221F] transition-colors hover:border-[#28B8B0] hover:bg-[#F3FAF9] sm:px-2 sm:py-2 sm:text-[11px]"
+              className="flex-1 rounded-lg border border-[#25ffe6] bg-[#d4fffa] px-1.5 py-1.5 text-[9px] font-bold text-[#09221F] transition-colors hover:border-[#28B8B0] hover:bg-[#F3FAF9] sm:px-2 sm:py-2 sm:text-[11px]"
             >
               View details
             </button>
@@ -354,13 +360,25 @@ function ServiceCard({ service, onBook }) {
                 </p>
 
                 {startingPrice != null ? (
-                  <p className="mt-1 text-2xl font-bold text-[#09221F]">
-                    ₹{startingPrice}
-                  </p>
+                  <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-2xl font-bold text-[#09221F]">
+                      ₹{startingPrice}
+                    </span>
+
+                    <span className="text-[10px] font-medium text-[#09221F] sm:text-xs">
+                      + 5% GST additional
+                    </span>
+                  </div>
                 ) : (
-                  <p className="mt-1 text-base font-semibold text-[#218F87]">
-                    Price on request
-                  </p>
+                  <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-base font-semibold text-[#218F87]">
+                      Price on request
+                    </span>
+
+                    <span className="text-[10px] font-medium text-[#09221F] sm:text-xs">
+                      + 5% GST additional
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -431,6 +449,7 @@ function ServiceCard({ service, onBook }) {
         </div>
       )}
 
+      {/* Booking Modal */}
       {isBookingOpen && (
         <BookingModal
           service={service}
@@ -441,9 +460,4 @@ function ServiceCard({ service, onBook }) {
   );
 }
 
-// memo: the Services page re-renders on fetch/pagination state changes; with
-// stable service objects and the useCallback handlers above, unchanged cards
-// skip re-rendering. (React Compiler auto-memoizes much of this, but the
-// explicit boundary keeps the prop contract clear and covers non-compiler
-// builds.)
 export default memo(ServiceCard);

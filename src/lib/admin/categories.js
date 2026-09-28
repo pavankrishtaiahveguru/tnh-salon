@@ -61,8 +61,17 @@ function extractOne(payload) {
 }
 
 // GET /api/categories
+// `options.branch` (optional): a branch slug — scopes per-category and
+// per-sub-category service counts to ACTIVE services mapped to that branch
+// via service_branches. `options.publicList` (optional): hides categories
+// (and sub-categories) whose scoped service count is 0 — the public Services
+// page's filter rule. Omitted (admin) → unscoped counts, every row visible.
 export async function getCategories(options = {}) {
-  const payload = await api.get("/api/categories", options);
+  const params = new URLSearchParams();
+  if (options.branch) params.set("branch", options.branch);
+  if (options.publicList) params.set("public", "1");
+  const query = params.toString();
+  const payload = await api.get(`/api/categories${query ? `?${query}` : ""}`);
   return extractList(payload);
 }
 

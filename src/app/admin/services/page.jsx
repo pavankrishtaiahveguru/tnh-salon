@@ -209,7 +209,11 @@ export default function AdminServicesPage() {
     try {
       const updated = await updateServiceStatus(service.id, nextStatus);
       if (updated) {
-        toast.success("Service status updated.");
+        toast.success(
+          nextStatus === "Active"
+            ? "Service activated successfully."
+            : "Service deactivated successfully.",
+        );
         setServices((current) =>
           current.map((item) => (item.id === service.id ? updated : item)),
         );
@@ -218,7 +222,7 @@ export default function AdminServicesPage() {
       }
     } catch (error) {
       toast.error(
-        error.message ?? "Unable to update service. Please try again.",
+        error.message ?? "Failed to update service status. Please try again.",
       );
     } finally {
       setTogglingStatusId(null);

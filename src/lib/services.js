@@ -213,6 +213,7 @@ export function prefetchServicesMeta() {
 export function clearServicesCache() {
   cache.clear();
   inFlight.clear();
+  categoriesCache.clear(); // per-branch category lists are admin-mutable too
 }
 
 // ---- Cached metadata (categories / branches) ------------------------------
@@ -220,23 +221,41 @@ export function clearServicesCache() {
 // repeat visits and prefetches don't re-request them. A failed fetch is never
 // cached, so the next call retries.
 
-let categoriesCache = null;
+// Category metadata is BRANCH-SCOPED: the same GET /api/categories endpoint
+// accepts ?branch=<slug> and returns per-branch service counts (via the
+// services + service_branches relationship), so the page can filter the
+// category strip server-side. Cache key includes the branch ("all" = the
+// unscoped list admin also uses), so switching branches can never serve
+// another branch's counts.
+const categoriesCache = new Map(); // key: branch slug or "all"
 let branchesCache = null;
 
-export function getCategoriesCached() {
-  if (categoriesCache && categoriesCache.expiresAt > Date.now()) {
-    return categoriesCache.promise;
+export function getCategoriesCached(branch = "all") {
+  const key = branch || "all";
+  const cached = categoriesCache.get(key);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.promise;
   }
-  const promise = getCategories()
+  // Public Services page listing: always active-only counts with zero-service
+  // categories hidden; scoped to the branch when one is selected ("all" =
+  // every branch).
+  const promise = getCategories(
+    key === "all"
+      ? { publicList: true }
+      : { branch: key, publicList: true },
+  )
     .then((value) => {
-      categoriesCache = { expiresAt: Date.now() + CACHE_TTL_MS, promise };
+      categoriesCache.set(key, {
+        expiresAt: Date.now() + CACHE_TTL_MS,
+        promise,
+      });
       return value;
     })
     .catch((error) => {
-      categoriesCache = null;
+      categoriesCache.delete(key);
       throw error;
     });
-  categoriesCache = { expiresAt: Date.now() + CACHE_TTL_MS, promise };
+  categoriesCache.set(key, { expiresAt: Date.now() + CACHE_TTL_MS, promise });
   return promise;
 }
 
