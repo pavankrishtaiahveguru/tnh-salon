@@ -52,11 +52,12 @@ All catalogue content (services, categories, branches) is served from the backen
 - Branch profile editing
 - **Catalogue Excel import/export** — export the live catalogue as `.xlsx`, import it back with full server-side validation applied in one transaction
 
-### AI Assistant
-- Floating AI chat widget on every public page (`AiChatWidget`)
-- Talks **only to the TNH backend** — never to Cheerio directly
-- Conversation **history** and **collectedData** sent with every message, **quick replies** rendered as tappable chips, multiple `answers` rendered as separate bubbles
-- Typing indicator, loading and error states; error messages mapped from API status codes
+### Deterministic Chatbot
+- Floating chat widget on every public page (`AiChatWidget`)
+- Fully **local/deterministic** — runs entirely in the browser, no backend or external AI calls
+- Guided booking flow: branch → category → sub-category → service → variant → date/time → name/phone → review → WhatsApp hand-off
+- Salon locations flow with branch details and Google Maps links
+- Typing indicator and error states
 
 ### Communication
 - **WhatsApp** floating button and per-branch WhatsApp booking
@@ -110,7 +111,7 @@ tnh-salon/
 │   │   ├── privacy/         # Privacy policy content
 │   │   └── services/        # Catalogue grid, filters, booking modal + utils
 │   ├── data/                # Static marketing data (branches, categories, popular services)
-│   └── lib/                 # API client (api.js), services cache, aiAgent, admin/*
+│   └── lib/                 # API client (api.js), services cache, chatbotService, admin/*
 ├── next.config.mjs          # Cloudinary image domain allow-list
 ├── jsconfig.json            # @/* path alias
 ├── package.json
@@ -151,26 +152,20 @@ All backend calls go through the shared client in `src/lib/api.js`:
 - Errors are normalised to a typed `ApiError` (`status`, optional row-level `errors`) with user-friendly messages — no backend internals are exposed
 - `src/lib/services.js` adds a 60s TTL cache, in-flight de-duplication and bounded memory for catalogue reads
 
-## AI Assistant
+## Deterministic Chatbot
 
-Architecture — the frontend never contacts Cheerio and never sees its credentials:
+The chat widget is fully local/deterministic — it never calls the TNH backend for conversation and never contacts any external AI service:
 
 ```
-Frontend (AiChatWidget)
-        │  POST /api/ai-agent/interact
-        ▼
-TNH Backend (tnh-backend)
-        │  server-side API key
-        ▼
-Cheerio AI Agent
-        │
-        ▼
-TNH Backend  ──▶  mapped JSON response ──▶  Frontend
+Frontend (AiChatWidget) ──▶ local state machine (chatbotService.js)
+        │                        │
+        │                        ├── catalogue data via existing backend APIs
+        │                        └── WhatsApp hand-off (wa.me, per-branch numbers)
 ```
 
-- The widget sends `{ question, history, collectedData }` and receives `{ answer, answers, quickReplies, context, collectedData, products }`
-- History excludes error messages; `collectedData` is merged with each response and re-sent on the next turn
-- `tokenUsage` from the AI provider is stripped by the backend before it reaches the frontend
+- Booking flow: branch → category → sub-category → service → variant → multiple services → date/time → name/phone → review → WhatsApp
+- Locations flow: branch details → Google Maps links
+- Greetings and unsupported messages are handled locally with quick replies; no AI fallback exists
 
 ## Environment Variables
 
