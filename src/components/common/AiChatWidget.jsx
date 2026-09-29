@@ -16,13 +16,12 @@ import {
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { interactWithAiAgent } from "@/lib/aiAgent";
-import { ApiError } from "@/lib/api";
 import {
   getChatbotBranches,
   getChatbotCategories,
   getChatbotServices,
 } from "@/lib/chatbotService";
+import { branches as branchMapData } from "@/data/branches";
 import { refreshChatbotData } from "@/lib/services";
 import {
   TIME_SLOTS,
@@ -53,7 +52,7 @@ function debugLog(label, value) {
 }
 
 // ==================================================
-// TNH Service + Booking Assistant (upgraded AI chat widget)
+// TNH Service + Booking Assistant (deterministic chat widget)
 // ==================================================
 // A new UI layer on top of the EXISTING TNH service + booking infrastructure:
 //   • Services/categories/subcategories/prices/ordering → the same public
@@ -61,33 +60,54 @@ function debugLog(label, value) {
 //   • Booking → the SAME shared logic as the Services-page booking modal
 //     (components/services/bookingCore.js): slots, validation, branch→
 //     WhatsApp destination mapping, message format and submission.
-//   • Free-form questions → optional AI via Frontend → TNH backend → Cheerio.
-//     The Cheerio secret never leaves the backend.
+//   • Greetings, intents and unknown messages → deterministic local rules.
+//     No AI provider, no external AI API — the chatbot is fully local.
 //
 // No hardcoded services, prices, categories, slots or branch numbers here.
 
-const FALLBACK_ERROR_MESSAGE =
-  "Sorry, I couldn't process your request right now. Please try again.";
+// Unknown messages get a friendly LOCAL fallback — no AI API, no network
+// request. The reply carries the standard welcome-action row.
+const UNKNOWN_MESSAGE_FALLBACK =
+  "I'm here to help you with appointments and salon locations. Please choose an option below.";
 
-// Local greeting reply — answered WITHOUT calling the AI agent/Cheerio.
-// The reply mirrors the user's actual greeting instead of always saying "Hi".
+// Local greeting reply — answered entirely from local logic (no AI service).
 const WELCOME_TAIL = "Welcome to The Nail Hue.\nHow can we help you today?";
 
-// Case-insensitive, punctuation/emoji/whitespace-safe greeting detection.
-// Only STANDALONE greetings match — "Hi, I want to book an appointment" does
-// not, so it keeps flowing through normal intent routing.
-function isGreetingMessage(text) {
-  const normalized = String(text ?? "")
+// Normalizes a user message for greeting detection: lowercase, trim, collapse
+// repeated spaces, drop harmless punctuation/emoji. Deliberately small — the
+// patterns below handle the rest, so no huge hardcoded greeting list.
+function normalizeUserMessage(text) {
+  return String(text ?? "")
     .toLowerCase()
     .replace(/[^a-z\s]/g, " ") // strip punctuation/emoji (",", "!", "👋", …)
     .trim()
     .replace(/\s+/g, " ");
-  return /^(hi+|hey+|hello+|hiya|good (morning|afternoon|evening))$/.test(
-    normalized,
-  );
 }
 
-// Mirrored greeting reply: "Hi" → "Hi! 👋", "Hello" → "Hello! 👋",
+// Standalone-greeting matcher. The letter-run patterns (h+i+, he+y+, he+l+o+)
+// accept stretched words like "hiiii" or "hellooo" without listing them. Only
+// STANDALONE greetings match — "Hi, I want to book an appointment" does not,
+// so it keeps flowing through normal intent routing.
+const GREETING_PATTERN = new RegExp(
+  "^(?:" +
+    "h+i+" + // hi, hii, hiii, …
+    "|he+y+" + // hey, heyy, heyyy, …
+    "|he+l+o+" + // hello, helloo, hellooo, …
+    "|hiya" + // hiya
+    "|good\\s+(?:morning|afternoon|evening|day|night)" +
+    "|greetings?" + // greeting / greetings
+    "|namaste|namaskar" + // namaste / namaskar
+    "|(?:nice|good)\\s+to\\s+(?:meet|see)\\s+you" + // nice/good to meet/see you
+    ")" +
+    "(?:\\s+(?:there|dear|again|all|everyone|everybody|folks|team))?" + // soft suffix
+    "$",
+);
+
+function isGreetingMessage(text) {
+  return GREETING_PATTERN.test(normalizeUserMessage(text));
+}
+
+// Mirrored greeting reply: "Hi" → "Hi! 👋", "Hellooo" → "Hello! 👋",
 // "Good morning" → "Good morning! ☀️", etc. Returns null for non-greetings.
 // Greeting emojis use ASCII \u{...} escapes for the same reason as the
 // WhatsApp message in bookingCore.js: astral (4-byte UTF-8) literals can be
@@ -95,22 +115,24 @@ function isGreetingMessage(text) {
 // escapes survive byte-exact and produce identical strings at runtime.
 function greetingReplyFor(text) {
   if (!isGreetingMessage(text)) return null;
-  const normalized = String(text ?? "")
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, " ")
-    .trim()
-    .replace(/\s+/g, " ");
-  const emoji = normalized.startsWith("good morning")
-    ? "\u{2600}\u{FE0F}" // ☀️ sun
-    : normalized.startsWith("good afternoon")
-      ? "\u{1F324}\u{FE0F}" // 🌤️ sun behind cloud
-      : normalized.startsWith("good evening")
-        ? "\u{1F319}" // 🌙 crescent moon
-        : "\u{1F44B}"; // 👋 waving hand
-  const greeting = normalized
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+  const normalized = normalizeUserMessage(text);
+  const emoji =
+    normalized.startsWith("good morning") || normalized.startsWith("good day")
+      ? "\u{2600}\u{FE0F}" // ☀️ sun
+      : normalized.startsWith("good afternoon")
+        ? "\u{1F324}\u{FE0F}" // 🌤️ sun behind cloud
+        : normalized.startsWith("good evening") ||
+            normalized.startsWith("good night")
+          ? "\u{1F319}" // 🌙 crescent moon
+          : "\u{1F44B}"; // 👋 waving hand
+  // Collapse stretched interjections back to their canonical word
+  // ("hiii" → "Hi", "hellooo" → "Hello"); phrases keep sentence casing.
+  let greeting;
+  if (/^hiya/.test(normalized)) greeting = "Hiya";
+  else if (/^hel+o+/.test(normalized)) greeting = "Hello";
+  else if (/^he+y+/.test(normalized)) greeting = "Hey";
+  else if (/^h+i+/.test(normalized)) greeting = "Hi";
+  else greeting = normalized.charAt(0).toUpperCase() + normalized.slice(1);
   return `${greeting}! ${emoji}\n${WELCOME_TAIL}`;
 }
 
@@ -396,17 +418,15 @@ function BranchOption({ branch, disabled, onSelect }) {
 export default function AiChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Chat log + AI (free-form questions via TNH backend → Cheerio).
+  // Chat log — every assistant reply is generated locally from deterministic
+  // rules (no AI provider, no external AI API).
   const [messages, setMessages] = useState([]);
-  const [quickReplies, setQuickReplies] = useState([]);
   // Scoped ONLY to the welcome action group (both the WelcomePanel buttons
-  // and the actions attached to the greeting message): once Book an
+  // and the actions attached to greeting/fallback messages): once Book an
   // Appointment or Salon Locations has been tapped, that group is disabled so
   // neither flow can be triggered twice. Every other button in the chatbot —
   // categories, services, variants, Continue, etc. — stays fully interactive.
-  const [collectedData, setCollectedData] = useState({});
   const [inputValue, setInputValue] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const [welcomeActionsUsed, setWelcomeActionsUsed] = useState(false);
 
   // Navigation stack (chatbot-internal; never browser history).
@@ -452,7 +472,7 @@ export default function AiChatWidget() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isSending, loadingText, view]);
+  }, [messages, loadingText, view]);
 
   useEffect(() => {
     if (isOpen) {
@@ -546,8 +566,6 @@ export default function AiChatWidget() {
   function restartChat() {
     refreshChatbotData();
     setMessages([]);
-    setQuickReplies([]);
-    setCollectedData({});
     setInputValue("");
     goHome();
   }
@@ -948,15 +966,18 @@ export default function AiChatWidget() {
   // ---------- Free-text input (keyword routing + optional AI) ----------
 
   function routeIntent(text) {
-    // A standalone greeting is answered locally before any intent routing —
-    // it must never reach the AI provider just to say hello.
-    if (isGreetingMessage(text)) return "greeting";
-    const t = text.toLowerCase();
+    // Deterministic intent priority (no AI provider involved anywhere):
+    // 1. Booking intent — "Hi, I want to book an appointment" starts booking.
+    const t = String(text ?? "").toLowerCase();
     if (/(book|appointment)/.test(t)) return "book";
+    // 2. Location intent — "Hello, show me your locations" opens locations.
     if (/(location|branch|address|where)/.test(t)) return "locations";
-    // Explore Services was removed — service queries route into the booking
-    // flow, the only place services can be browsed.
+    // 3. Service queries route into the booking flow (Explore Services was
+    //    removed — services are browsed only inside booking).
     if (/(service|menu|explore|categor)/.test(t)) return "book";
+    // 4. Standalone greeting — only bare greetings ("hi", "hello there",
+    //    "good morning", …) land here; real requests were routed above.
+    if (isGreetingMessage(text)) return "greeting";
     return null;
   }
 
@@ -990,19 +1011,18 @@ export default function AiChatWidget() {
 
   async function sendMessage(rawText) {
     const text = rawText.trim();
-    if (!text || isSending) return;
+    if (!text) return;
 
-    // Structured intents never touch the AI provider — the service/booking
-    // flow runs entirely on TNH APIs.
+    // Deterministic intent routing — every reply comes from local rules and
+    // TNH APIs; no AI provider is involved.
     const intent = routeIntent(text);
     if (intent) {
       pushMessages([{ id: nextMessageId(), role: "user", content: text }]);
       setInputValue("");
-      setQuickReplies([]);
       // Greeting: reply locally, mirroring the user's greeting, with the two
-      // welcome actions attached to THIS message. Never calls Cheerio, never
-      // touches booking state. This message's action row is the ONLY action
-      // group rendered — there is no separate global welcome-action row.
+      // welcome actions attached to THIS message. This message's action row
+      // is the ONLY action group rendered — there is no separate global
+      // welcome-action row.
       if (intent === "greeting") {
         pushMessages([
           {
@@ -1021,61 +1041,21 @@ export default function AiChatWidget() {
       return;
     }
 
-    const history = messages
-      .filter((message) => !message.isError)
-      .map(({ role, content }) => ({ role, content }));
-
     pushMessages([{ id: nextMessageId(), role: "user", content: text }]);
     setInputValue("");
-    setQuickReplies([]);
-    setIsSending(true);
 
-    try {
-      const result = await interactWithAiAgent({
-        question: text,
-        history,
-        collectedData,
-      });
-
-      const answerTexts = result.answers.length
-        ? result.answers
-        : result.answer
-          ? [result.answer]
-          : [];
-
-      const assistantMessages = answerTexts.length
-        ? answerTexts.map((content) => ({
-            id: nextMessageId(),
-            role: "assistant",
-            content,
-          }))
-        : [
-            {
-              id: nextMessageId(),
-              role: "assistant",
-              content: "I'm here to help — could you rephrase that?",
-            },
-          ];
-
-      pushMessages(assistantMessages);
-      // Never surface a quick reply that would launch the removed standalone
-      // Explore Services flow — service browsing lives in booking only.
-      setQuickReplies(
-        result.quickReplies.filter(
-          (reply) =>
-            !/explore\s*services|browse\s*services|view\s*services/i.test(
-              reply,
-            ),
-        ),
-      );
-      setCollectedData((prev) => ({ ...prev, ...result.collectedData }));
-    } catch (error) {
-      const message =
-        error instanceof ApiError ? error.message : FALLBACK_ERROR_MESSAGE;
-      pushAssistant(message || FALLBACK_ERROR_MESSAGE, true);
-    } finally {
-      setIsSending(false);
-    }
+    // Unknown message: friendly local fallback, generated entirely on the
+    // frontend — nothing is sent to any AI API or backend endpoint. The reply
+    // carries the welcome-action row through the same single action renderer
+    // as every other action group.
+    pushMessages([
+      {
+        id: nextMessageId(),
+        role: "assistant",
+        content: UNKNOWN_MESSAGE_FALLBACK,
+        actions: WELCOME_ACTIONS,
+      },
+    ]);
   }
 
   function handleKeyDown(event) {
@@ -1121,9 +1101,9 @@ export default function AiChatWidget() {
                 </a>
               </p>
             )}
-            {branch.map_url && (
+            {branchMapData[branch.id]?.mapUrl && (
               <a
-                href={branch.map_url}
+                href={branchMapData[branch.id]?.mapUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-1.5 inline-block text-[11px] font-semibold text-[#218F87] underline underline-offset-2"
@@ -2010,7 +1990,7 @@ export default function AiChatWidget() {
                     />
                   ))}
 
-                  {(isSending || loadingText) && <TypingIndicator />}
+                  {loadingText && <TypingIndicator />}
 
                   {/* NOTE: there is intentionally NO global welcome-action row
                       here. The Book an Appointment / Salon Locations buttons
@@ -2020,28 +2000,7 @@ export default function AiChatWidget() {
                       welcome message). A second global row would duplicate
                       the buttons after every greeting. */}
 
-                  {!isSending &&
-                    !loadingText &&
-                    quickReplies.length > 0 &&
-                    view === VIEWS.WELCOME && (
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {quickReplies.map((reply) => (
-                          <button
-                            key={reply}
-                            type="button"
-                            onClick={() => sendMessage(reply)}
-                            className={pillClasses()}
-                          >
-                            {reply}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                  {!isSending &&
-                    !loadingText &&
-                    view !== VIEWS.WELCOME &&
-                    renderViewPanel()}
+                  {!loadingText && view !== VIEWS.WELCOME && renderViewPanel()}
                 </div>
               )}
 
@@ -2071,7 +2030,7 @@ export default function AiChatWidget() {
               <button
                 type="button"
                 onClick={() => sendMessage(inputValue)}
-                disabled={isSending || !inputValue.trim()}
+                disabled={!inputValue.trim()}
                 aria-label="Send message"
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#27A399] text-white shadow-sm transition hover:bg-[#218F87] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#218F87]"
               >

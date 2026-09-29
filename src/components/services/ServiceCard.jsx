@@ -365,7 +365,7 @@ function ServiceCard({ service, onBook }) {
                       ₹{startingPrice}
                     </span>
 
-                    <span className="text-[10px] font-medium text-[#09221F] sm:text-xs">
+                    <span className="text-[10px] text-[#09221F] md:text-[8px]">
                       + tax
                     </span>
                   </div>
@@ -375,7 +375,7 @@ function ServiceCard({ service, onBook }) {
                       Price on request
                     </span>
 
-                    <span className="text-[10px] font-medium text-[#09221F] sm:text-xs">
+                    <span className="text-[10px]  text-[#09221F] md:text-[8px] ">
                       + tax
                     </span>
                   </div>
