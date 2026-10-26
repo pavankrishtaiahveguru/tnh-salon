@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 
 import ServicesHero from "@/components/services/ServicesHero";
+import { getSafeMediaUrl } from "@/lib/media";
 import ServicesBreadcrumb from "@/components/services/ServicesBreadcrumb";
 import ServiceCard from "@/components/services/ServiceCard";
 import ServicesGridSkeleton from "@/components/services/ServicesGridSkeleton";
@@ -100,10 +101,10 @@ function CategoryTile({ category, isSelected, onSelect }) {
             : "ring-[#DCE8E5] hover:ring-[#28B8B0]"
         }`}
       >
-        {category.image ? (
+        {getSafeMediaUrl(category.image) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={category.image}
+            src={getSafeMediaUrl(category.image)}
             alt={category.name}
             className="h-full w-full object-cover"
           />

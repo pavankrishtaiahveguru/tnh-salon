@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { serviceCategories } from "@/data/serviceCategories";
+import { getSafeMediaUrl } from "@/lib/media";
 
 export default function ServiceCategorySidebar({
   activeCategory,
@@ -73,9 +74,9 @@ export default function ServiceCategorySidebar({
                     : "border-[#E2EBE9]"
                 }`}
               >
-                {category.image ? (
+                {getSafeMediaUrl(category.image) ? (
                   <img
-                    src={category.image}
+                    src={getSafeMediaUrl(category.image)}
                     alt={category.name}
                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
@@ -167,9 +168,9 @@ export default function ServiceCategorySidebar({
                           : "border-[#E2EBE9]"
                       }`}
                     >
-                      {category.image ? (
+                      {getSafeMediaUrl(category.image) ? (
                         <img
-                          src={category.image}
+                          src={getSafeMediaUrl(category.image)}
                           alt={category.name}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />

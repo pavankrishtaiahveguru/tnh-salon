@@ -146,6 +146,15 @@ export const api = {
     body.append("slug", slug);
     return request("POST", "/api/upload/image", { body });
   },
+  uploadVideo: (file, type, slug) => {
+    const body = new FormData();
+    body.append("video", file);
+    body.append("type", type);
+    body.append("slug", slug);
+    return request("POST", "/api/upload/video", { body });
+  },
+  deleteMedia: (objectKey) =>
+    request("DELETE", "/api/upload/media", { body: { objectKey } }),
 };
 
 export default api;

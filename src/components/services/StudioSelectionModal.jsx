@@ -1,4 +1,5 @@
 import { ArrowRight, MapPin, X } from "lucide-react";
+import { getSafeMediaUrl } from "@/lib/media";
 import {
   formatPrice,
   getBasePrice,
@@ -29,9 +30,9 @@ export default function StudioSelectionModal({
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-3 rounded-xl border border-[#DCEBE8] bg-[#F8FCFB] p-3">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#E4F5F2]">
-              {service.image ? (
+              {getSafeMediaUrl(service.image) ? (
                 <img
-                  src={service.image}
+                  src={getSafeMediaUrl(service.image)}
                   alt={service.name}
                   className="h-full w-full object-cover"
                 />

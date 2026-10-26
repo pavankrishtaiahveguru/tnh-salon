@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, X, Plus, Trash2 } from "lucide-react";
 import {
@@ -16,6 +16,7 @@ import { TextInput, TextArea, Select, FormSection } from "./AdminFields";
 import BranchSelector from "./BranchSelector";
 import ImageUpload from "./ImageUpload";
 import { useAdminToast } from "./AdminToast";
+import api from "@/lib/api";
 
 // Reusable service form for /admin/services/new and /admin/services/[id].
 export default function ServiceForm({ service }) {
@@ -52,6 +53,19 @@ export default function ServiceForm({ service }) {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState("");
+  const pendingObjectKeyRef = useRef(null);
+
+  const cleanupPendingUpload = async () => {
+    const objectKey = pendingObjectKeyRef.current;
+    if (!objectKey) return true;
+    try {
+      await api.deleteMedia(objectKey);
+      pendingObjectKeyRef.current = null;
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // Categories come from the backend (they are needed before editing an
   // existing service's category/sub-category selections).
@@ -154,10 +168,16 @@ export default function ServiceForm({ service }) {
         await createService(payload);
         toast.success("Service added successfully.");
       }
+      pendingObjectKeyRef.current = null;
       router.push("/admin/services");
       router.refresh();
     } catch (error) {
-      toast.error(error.message ?? "Something went wrong.");
+      const cleaned = await cleanupPendingUpload();
+      toast.error(
+        cleaned
+          ? error.message ?? "Something went wrong."
+          : `${error.message ?? "Something went wrong."} The uploaded media could not be cleaned up.`,
+      );
     } finally {
       setSaving(false);
     }
@@ -426,6 +446,9 @@ export default function ServiceForm({ service }) {
           label="Service Image"
           value={form.image}
           onChange={(value) => setField("image", value)}
+          onUploaded={(result) => {
+            pendingObjectKeyRef.current = result?.objectKey ?? null;
+          }}
           uploadType="services"
           uploadSlug={form.name}
         />
@@ -435,7 +458,10 @@ export default function ServiceForm({ service }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={async () => {
+            await cleanupPendingUpload();
+            router.back();
+          }}
           className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[#D7EAE7] bg-white px-5 text-sm font-semibold text-[#173B38] transition-colors hover:bg-[#F3F8F6]"
         >
           <X size={15} />

@@ -2,10 +2,11 @@
 
 import { memo, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { getSafeMediaUrl } from "@/lib/media";
 import { Clock, UserRound, Plus, X } from "lucide-react";
 import BookingModal from "./BookingModal";
 
-// Card grid images are ~48–64px tiles served from Cloudinary.
+// Card grid images are ~48–64px tiles served from the configured media domain.
 const CARD_IMAGE_SIZES =
   "(max-width: 640px) 48px, (max-width: 768px) 64px, 64px";
 
@@ -85,9 +86,9 @@ function ServiceCard({ service, onBook }) {
           <div className="flex items-start gap-3">
             {/* Image / Initial */}
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-[#E8F6F4] sm:h-[64px] sm:w-[64px] sm:rounded-[14px]">
-              {service.image ? (
+              {getSafeMediaUrl(service.image) ? (
                 <Image
-                  src={service.image}
+                  src={getSafeMediaUrl(service.image)}
                   alt={service.name}
                   width={64}
                   height={64}
@@ -263,9 +264,9 @@ function ServiceCard({ service, onBook }) {
               {/* Service Top */}
               <div className="flex items-start gap-4">
                 <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center overflow-hidden rounded-[16px] bg-[#E8F6F4]">
-                  {service.image ? (
+                  {getSafeMediaUrl(service.image) ? (
                     <Image
-                      src={service.image}
+                      src={getSafeMediaUrl(service.image)}
                       alt={service.name}
                       width={76}
                       height={76}

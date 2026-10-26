@@ -12,6 +12,7 @@ import {
 import { TextInput, TextArea, Select, FormSection } from "./AdminFields";
 import ImageUpload from "./ImageUpload";
 import { useAdminToast } from "./AdminToast";
+import api from "@/lib/api";
 
 // Reusable category form for /admin/categories/new and /admin/categories/[id].
 export default function CategoryForm({ category }) {
@@ -55,6 +56,19 @@ export default function CategoryForm({ category }) {
   // outcome (toast + local state). The buttons are also disabled while
   // isReordering is true, so in practice this is a second line of defense.
   const reorderTokenRef = useRef(0);
+  const pendingObjectKeyRef = useRef(null);
+
+  const cleanupPendingUpload = async () => {
+    const objectKey = pendingObjectKeyRef.current;
+    if (!objectKey) return true;
+    try {
+      await api.deleteMedia(objectKey);
+      pendingObjectKeyRef.current = null;
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const moveSubCategory = async (index, direction) => {
     if (!canReorder || isReordering) return;
@@ -172,10 +186,16 @@ export default function CategoryForm({ category }) {
         await createCategory(payload);
         toast.success("Category created successfully.");
       }
+      pendingObjectKeyRef.current = null;
       router.push("/admin/categories");
       router.refresh();
     } catch (error) {
-      toast.error(error.message ?? "Something went wrong.");
+      const cleaned = await cleanupPendingUpload();
+      toast.error(
+        cleaned
+          ? error.message ?? "Something went wrong."
+          : `${error.message ?? "Something went wrong."} The uploaded media could not be cleaned up.`,
+      );
     } finally {
       setSaving(false);
     }
@@ -231,6 +251,9 @@ export default function CategoryForm({ category }) {
           label="Category Image"
           value={form.image}
           onChange={(value) => setField("image", value)}
+          onUploaded={(result) => {
+            pendingObjectKeyRef.current = result?.objectKey ?? null;
+          }}
           uploadType="categories"
           uploadSlug={form.name}
           hint="Shown beside the category name across the customer site."

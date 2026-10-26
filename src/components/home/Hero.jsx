@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 const videos = [
-  "https://res.cloudinary.com/eumjdehq/video/upload/v1789723717/salon-2.mp4",
-  "https://res.cloudinary.com/eumjdehq/video/upload/v1789723872/salon-1.mov",
+  "hero/hero-1.MP4",
+  "hero/hero-2.MP4",
 ];
 
 export default function Hero() {

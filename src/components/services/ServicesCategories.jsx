@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
+import { getSafeMediaUrl } from "@/lib/media";
 import {
   Scissors,
   Hand,
@@ -57,9 +58,9 @@ function CategoryCard({ category, imageSizes }) {
     >
       {/* Icon / Image */}
       <div className="relative flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-[#F1F6F5] transition-transform duration-300 group-hover:scale-105 sm:h-[84px] sm:w-[84px] lg:h-[96px] lg:w-[96px]">
-        {category.image ? (
+        {getSafeMediaUrl(category.image) ? (
           <Image
-            src={category.image}
+            src={getSafeMediaUrl(category.image)}
             alt={category.name}
             fill
             sizes={imageSizes}

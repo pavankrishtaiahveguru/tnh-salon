@@ -22,6 +22,7 @@ import {
   getChatbotServices,
 } from "@/lib/chatbotService";
 import { branches as branchMapData } from "@/data/branches";
+import { getSafeMediaUrl } from "@/lib/media";
 import { refreshChatbotData } from "@/lib/services";
 import {
   TIME_SLOTS,
@@ -190,10 +191,11 @@ function secondaryButtonClasses(extra = "") {
 }
 
 function serviceImage(service) {
-  if (service.image) {
+  const imageUrl = getSafeMediaUrl(service.image);
+  if (imageUrl) {
     return (
       <img
-        src={service.image}
+        src={imageUrl}
         alt={service.name}
         className="h-full w-full object-cover"
       />

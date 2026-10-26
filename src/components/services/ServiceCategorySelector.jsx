@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { getSafeMediaUrl } from "@/lib/media";
 import {
   ArrowLeft,
   Check,
@@ -275,9 +276,9 @@ export default function ServiceCategorySelector({
                       className={`flex items-center gap-2.5 rounded-xl border p-2.5 ${selected ? "border-[#28B8B0] bg-[#F1FAF8]" : "border-[#DCEAE8]"}`}
                     >
                       <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#E8F6F4]">
-                        {service.image ? (
+                        {getSafeMediaUrl(service.image) ? (
                           <img
-                            src={service.image}
+                            src={getSafeMediaUrl(service.image)}
                             alt={service.name}
                             className="h-full w-full object-cover"
                           />

@@ -9,6 +9,7 @@ import {
   branchAvailabilityShortLabel,
   pricingTypeLabel,
 } from "@/lib/admin/config";
+import { getSafeMediaUrl } from "@/lib/media";
 
 export function formatServicePrice(service) {
   if (service.pricingType === "fixed") return `₹${service.price}`;
@@ -67,10 +68,10 @@ export default function ServiceTable({
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#EAF6F4] text-[#218F87]">
-                      {service.image ? (
+                      {getSafeMediaUrl(service.image) ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={service.image}
+                          src={getSafeMediaUrl(service.image)}
                           alt={service.name}
                           className="h-full w-full object-cover"
                         />
@@ -146,10 +147,10 @@ export default function ServiceTable({
           <li key={service.id} className="p-4">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#EAF6F4] text-[#218F87]">
-                {service.image ? (
+                {getSafeMediaUrl(service.image) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={service.image}
+                    src={getSafeMediaUrl(service.image)}
                     alt={service.name}
                     className="h-full w-full object-cover"
                   />

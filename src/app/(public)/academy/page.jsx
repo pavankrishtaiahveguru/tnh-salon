@@ -29,7 +29,7 @@ const whatsappMessage = (message) => {
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 };
 
-// Hero media carousel — swap these placeholders for the final Cloudinary URLs.
+// Hero media carousel — replace these placeholders with approved media URLs.
 const academyHeroImages = [
   "/academy/academy-005.jpg",
   "/academy/academy-001.jpg",

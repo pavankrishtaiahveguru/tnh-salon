@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import AdminEmptyState from "./AdminEmptyState";
+import { getSafeMediaUrl } from "@/lib/media";
 
 // Categories list with responsive card fallback on small screens.
 export default function CategoryTable({
@@ -78,10 +79,10 @@ export default function CategoryTable({
 
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#EAF6F4] text-[#218F87]">
-                {category.image ? (
+                {getSafeMediaUrl(category.image) ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={category.image}
+                    src={getSafeMediaUrl(category.image)}
                     alt={category.name}
                     className="h-full w-full object-cover"
                   />

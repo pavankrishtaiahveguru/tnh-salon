@@ -17,6 +17,7 @@ import { getCategories } from "@/lib/admin/categories";
 import { getBranches } from "@/lib/admin/branches";
 import StatusBadge from "@/components/admin/StatusBadge";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import { getSafeMediaUrl } from "@/lib/media";
 
 function formatPrice(service) {
   if (service.pricingType === "fixed") return `₹${service.price}`;
@@ -160,10 +161,10 @@ export default function AdminDashboard() {
                 className="flex items-center gap-4 px-5 py-3.5 sm:px-6"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#EAF6F4] text-[#218F87]">
-                  {service.image ? (
+                  {getSafeMediaUrl(service.image) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={service.image}
+                      src={getSafeMediaUrl(service.image)}
                       alt={service.name}
                       className="h-full w-full object-cover"
                     />

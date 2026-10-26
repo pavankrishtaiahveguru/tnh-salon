@@ -3,23 +3,28 @@
 import { useRef, useState } from "react";
 import { UploadCloud, X } from "lucide-react";
 import api from "@/lib/api";
+import { getSafeMediaUrl } from "@/lib/media";
+import { useAdminToast } from "./AdminToast";
 
-// Reusable image upload field. Stores the picked file as a data URL so the
-// preview works with the Cloudinary URL returned by the backend.
+// Reusable R2 image upload field.
 export default function ImageUpload({
   label = "Image",
   value,
   onChange,
+  onUploaded,
   uploadType,
   uploadSlug,
   aspect = "aspect-square",
   hint,
 }) {
+  const toast = useAdminToast();
   const inputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const previousUploadRef = useRef(null);
+  const previewUrl = getSafeMediaUrl(value);
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -28,10 +33,14 @@ export default function ImageUpload({
 
     if (!file.type.startsWith("image/")) {
       setError("Invalid image format.");
+      toast.error("Invalid image format.");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("Image size is too large.");
+      const message =
+        "Image size is too large. Please upload an image smaller than or equal to 5 MB.";
+      setError(message);
+      toast.error(message);
       return;
     }
 
@@ -40,12 +49,27 @@ export default function ImageUpload({
       const result = await api.uploadImage(file, uploadType, uploadSlug);
       if (!result?.imageUrl)
         throw new Error("Image upload failed. Please try again.");
+      const previousObjectKey = previousUploadRef.current;
+      previousUploadRef.current = result.objectKey;
+      onUploaded?.(result);
       onChange(result.imageUrl);
       setSuccess(true);
+      toast.success("Image uploaded successfully.");
+      if (previousObjectKey && previousObjectKey !== result.objectKey) {
+        try {
+          await api.deleteMedia(previousObjectKey);
+        } catch {
+          setError("The new image was uploaded, but the previous unsaved upload could not be removed.");
+          toast.error("The previous unsaved image could not be removed.");
+        }
+      }
     } catch (uploadError) {
+      const message =
+        uploadError?.message ?? "Image upload failed. Please try again.";
       setError(
-        uploadError?.message ?? "Image upload failed. Please try again.",
+        message,
       );
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -59,19 +83,30 @@ export default function ImageUpload({
         </label>
       ) : null}
 
-      {value ? (
+      {previewUrl ? (
         <div
           className={`relative w-40 overflow-hidden rounded-xl border border-[#D7EAE7] bg-white ${aspect}`}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={value}
+            src={previewUrl}
             alt="Preview"
             className="h-full w-full object-cover"
           />
           <button
             type="button"
-            onClick={() => onChange("")}
+            onClick={() => {
+              const pendingObjectKey = previousUploadRef.current;
+              previousUploadRef.current = null;
+              onUploaded?.(null);
+              onChange("");
+              if (pendingObjectKey) {
+                api.deleteMedia(pendingObjectKey).catch(() => {
+                  setError("The unsaved upload could not be removed.");
+                  toast.error("The unsaved image could not be removed.");
+                });
+              }
+            }}
             aria-label="Remove image"
             className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#173B38] shadow-sm transition-colors hover:bg-white"
           >
@@ -79,6 +114,12 @@ export default function ImageUpload({
           </button>
         </div>
       ) : (
+        <>
+          {value ? (
+            <p className="mb-2 text-xs font-medium text-amber-700">
+              Existing media is unavailable at the configured media domain. Upload a verified replacement.
+            </p>
+          ) : null}
         <button
           type="button"
           disabled={uploading}
@@ -107,6 +148,7 @@ export default function ImageUpload({
           </span>
           <span className="text-[11px] text-[#5F7774]">PNG, JPG or WebP</span>
         </button>
+        </>
       )}
 
       {hint ? (

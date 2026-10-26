@@ -38,7 +38,7 @@ All catalogue content (services, categories, branches) is served from the backen
 
 ### Gallery
 - Categorised photo/video grid (hair, nails, skin, BTS) with filter chips
-- Media hosted on **Cloudinary**; videos and images loaded via `next/image`
+- Remote media is served from the configured **Cloudflare R2** public HTTPS domain; existing files under `public/` remain local
 
 ### Academy / Founder / Privacy
 - Academy page with hero media carousel and enquiry section
@@ -47,7 +47,7 @@ All catalogue content (services, categories, branches) is served from the backen
 
 ### Admin Panel (`/admin`)
 - JWT login with backend session verification (`GET /api/auth/me`), route guard, and 401-aware API client
-- Services CRUD with pagination, filters, status toggle and image upload to Cloudinary
+- Services CRUD with pagination, filters, status toggle and image upload to Cloudflare R2
 - Categories CRUD including sub-categories and reorder
 - Branch profile editing
 - **Catalogue Excel import/export** — export the live catalogue as `.xlsx`, import it back with full server-side validation applied in one transaction
@@ -112,7 +112,7 @@ tnh-salon/
 │   │   └── services/        # Catalogue grid, filters, booking modal + utils
 │   ├── data/                # Static marketing data (branches, categories, popular services)
 │   └── lib/                 # API client (api.js), services cache, chatbotService, admin/*
-├── next.config.mjs          # Cloudinary image domain allow-list
+├── next.config.mjs          # Configured R2 image domain allow-list
 ├── jsconfig.json            # @/* path alias
 ├── package.json
 └── postcss.config.mjs
@@ -128,7 +128,7 @@ Verified against `src/app`:
 | `/services` | Services catalogue with filters, pagination and booking flow |
 | `/branches/indiranagar` | Indiranagar branch page |
 | `/branches/sarjapur` | Sarjapur Road branch page |
-| `/gallery` | Photo/video gallery (Cloudinary media) |
+| `/gallery` | Photo/video gallery (local and configured remote media) |
 | `/academy` | Academy / courses page |
 | `/founder` | Founder page |
 | `/privacy-policy` | Privacy policy |
@@ -216,6 +216,6 @@ Vercel is the intended hosting platform (the project owner has a Vercel account 
 - **"API URL is not configured"** — set `NEXT_PUBLIC_API_URL` in `.env.local` and restart `npm run dev`. Next.js only reads env files at startup.
 - **Catalogue/network errors on `/services`** — the backend is probably not running or unreachable. Start `tnh-backend` and verify the health check (`GET /health` on the backend URL).
 - **CORS errors in the browser console** — the backend allow-lists a single origin via its `CLIENT_URL` env var. It must exactly match the frontend origin, including port and protocol.
-- **Images fail to load** — Cloudinary images are restricted by hostname in `next.config.mjs` (`res.cloudinary.com/eumjdehq/**`). Image file names are case-sensitive in production; verify paths and extensions.
+- **Remote media is not shown** — set `NEXT_PUBLIC_R2_PUBLIC_BASE_URL` to the HTTPS R2 custom media domain used by the backend, then rebuild the frontend. Remote images from other hosts are intentionally not rendered; local `/public` assets remain available.
 - **Admin redirected to login** — the JWT expired or `JWT_SECRET` changed on the backend. Sign in again.
 - **Type errors around `env`** — environment variables are plain strings at runtime; check for typos between `.env.local` and the names referenced in `src/lib`.

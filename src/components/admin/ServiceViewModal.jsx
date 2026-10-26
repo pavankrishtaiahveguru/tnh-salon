@@ -4,6 +4,7 @@ import { Scissors, Clock, MapPin, Users, Layers, Tag,IndianRupee, Info } from "l
 import AdminModal from "./AdminModal";
 import StatusBadge from "./StatusBadge";
 import { branchAvailabilityShortLabel, pricingTypeLabel } from "@/lib/admin/config";
+import { getSafeMediaUrl } from "@/lib/media";
 
 function formatPrice(service) {
   if (service.pricingType === "fixed") return `₹${service.price}`;
@@ -43,10 +44,10 @@ export default function ServiceViewModal({ service, onClose, onEdit }) {
           {/* Image + summary */}
           <div className="flex flex-col gap-4 sm:flex-row">
             <div className="flex h-40 w-full shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#D7EAE7] bg-[#EAF6F4] text-[#218F87] sm:h-36 sm:w-36">
-              {service.image ? (
+              {getSafeMediaUrl(service.image) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={service.image}
+                  src={getSafeMediaUrl(service.image)}
                   alt={service.name}
                   className="h-full w-full object-cover"
                 />

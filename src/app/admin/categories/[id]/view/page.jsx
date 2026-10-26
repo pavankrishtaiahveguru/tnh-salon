@@ -6,6 +6,7 @@ import { ArrowLeft, FolderTree, Layers, Scissors, Tag } from "lucide-react";
 import { getCategoryById } from "@/lib/admin/categories";
 import { getServices } from "@/lib/admin/services";
 import StatusBadge from "@/components/admin/StatusBadge";
+import { getSafeMediaUrl } from "@/lib/media";
 
 export default function ViewCategoryPage({ params }) {
   const { id } = use(params);
@@ -79,10 +80,10 @@ export default function ViewCategoryPage({ params }) {
       <div className="rounded-2xl border border-[#D7EAE7] bg-white p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#EAF6F4] text-[#218F87]">
-            {category.image ? (
+            {getSafeMediaUrl(category.image) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={category.image}
+                src={getSafeMediaUrl(category.image)}
                 alt={category.name}
                 className="h-full w-full object-cover"
               />

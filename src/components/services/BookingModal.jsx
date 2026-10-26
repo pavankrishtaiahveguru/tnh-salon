@@ -14,6 +14,7 @@ import {
 import StudioSelectionModal from "./StudioSelectionModal";
 import ServiceCategorySelector from "./ServiceCategorySelector";
 import BookingConfirmation from "./Bookingconfirmation";
+import { getSafeMediaUrl } from "@/lib/media";
 
 import {
   getVariants,
@@ -431,9 +432,9 @@ export default function BookingModal({
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-2.5">
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#E4F5F2] sm:h-12 sm:w-12">
-                            {s.image ? (
+                            {getSafeMediaUrl(s.image) ? (
                               <img
-                                src={s.image}
+                                src={getSafeMediaUrl(s.image)}
                                 alt={s.name}
                                 className="h-full w-full object-cover"
                               />
