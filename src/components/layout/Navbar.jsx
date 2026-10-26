@@ -13,7 +13,8 @@ const navLinks = [
 ];
 
 const secondaryLinks = [
-  { name: "Academy", href: "/academy" },
+  // Keep Academy's route-specific fonts and stylesheet out of unrelated pages.
+  { name: "Academy", href: "/academy", prefetch: false },
   { name: "Founder", href: "/founder" },
 ];
 
@@ -217,6 +218,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
+                prefetch={link.prefetch}
                 className="group relative inline-block py-1 text-[17px] font-medium transition-colors duration-300 ease-in-out"
                 style={{ color: active ? TEAL : DARK_GREEN }}
               >
@@ -338,6 +340,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
+                prefetch={link.prefetch}
                 onClick={closeMenu}
                 className="relative flex items-center border-b border-border py-4 text-base font-medium transition-colors duration-300"
                 style={{ color: active ? TEAL : DARK_GREEN }}

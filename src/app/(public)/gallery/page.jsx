@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { FaInstagram } from "react-icons/fa";
 import { FiArrowRight } from "react-icons/fi";
@@ -492,6 +492,36 @@ function GalleryCard({ item, index }) {
           : "aspect-[4/3]";
 
   const isVideo = item.type === "video";
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (!isVideo) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    const loadVideo = () => {
+      video.preload = "auto";
+      video.src = item.src;
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+      loadVideo();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadVideo();
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(video);
+
+    return () => observer.disconnect();
+  }, [isVideo, item.src]);
 
   return (
     <div
@@ -517,13 +547,13 @@ function GalleryCard({ item, index }) {
         {/* VIDEO */}
         {isVideo && (
           <video
-            src={item.src}
+            ref={videoRef}
             className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
             autoPlay
             muted
             loop
             playsInline
-            preload={index < 3 ? "auto" : "metadata"}
+            preload="none"
           />
         )}
 
