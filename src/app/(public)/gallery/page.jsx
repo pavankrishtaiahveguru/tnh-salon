@@ -12,7 +12,7 @@ const galleryItems = [
   {
     type: "video",
     category: "Hair",
-    src: "/images/gallery/videos/hair-1.MP4",
+    src: "https://pub-b918b81434db40679914292fe67c6d10.r2.dev/gallery-videos/hair-1.MP4",
     alt: "Hair care at The Nail Hue",
     size: "portrait",
   },
@@ -23,7 +23,7 @@ const galleryItems = [
   {
     type: "video",
     category: "Hair",
-    src: "/images/gallery/videos/hair-2.MP4",
+    src: "https://pub-b918b81434db40679914292fe67c6d10.r2.dev/gallery-videos/hair-2.MP4",
     alt: "Hair care at The Nail Hue",
     size: "portrait",
   },
@@ -143,7 +143,7 @@ const galleryItems = [
   {
     type: "video",
     category: "Nails",
-    src: "/images/gallery/videos/nail.MP4",
+    src: "https://pub-b918b81434db40679914292fe67c6d10.r2.dev/gallery-videos/nail.MP4",
     alt: "Nail care at The Nail Hue",
     size: "portrait",
   },
@@ -245,7 +245,7 @@ const galleryItems = [
   {
     type: "video",
     category: "Skin",
-    src: "/images/gallery/videos/skin.MP4",
+    src: "https://pub-b918b81434db40679914292fe67c6d10.r2.dev/gallery-videos/facial.MP4",
     alt: "Skin care at The Nail Hue",
     size: "portrait",
   },
