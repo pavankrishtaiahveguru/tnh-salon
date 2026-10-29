@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 const videos = [
-  "hero/hero-1.MP4",
-  "hero/hero-2.MP4",
+  "https://pub-b918b81434db40679914292fe67c6d10.r2.dev/home-videos/hero-1.MP4",
+  "https://pub-b918b81434db40679914292fe67c6d10.r2.dev/home-videos/hero-2.MP4",
 ];
 
 export default function Hero() {
@@ -61,10 +61,9 @@ export default function Hero() {
         <div className="w-full max-w-4xl">
           {/* Heading */}
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
-            The Nail Hue -{" "}
-            <br />
+            The Nail Hue - <br />
             <span className="text-[#A9D9D5] text-4xl lg:text-6xl ">
-              Bangalore's Creative Salon <br/> for Hair, Nails & Skin
+              Bangalore's Creative Salon <br /> for Hair, Nails & Skin
             </span>
           </h1>
 
@@ -175,8 +174,6 @@ export default function Hero() {
               <p className="text-1.5xl md:text-2xl font-medium tracking-tight text-white">
                 Vegan nail and skin products
               </p>
-
-              
             </div>
           </div>
         </div>
